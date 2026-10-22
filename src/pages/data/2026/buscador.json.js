@@ -1,4 +1,4 @@
-import records from "../../../../data/2026/sueldo-2026.json";
+import records from "../../../../data/sueldo-2026.json";
 
 export function GET() {
   const people = records.map((record) => ({

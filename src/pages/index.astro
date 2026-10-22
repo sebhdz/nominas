@@ -40,7 +40,7 @@ import "../styles/global.css";
       <div class="table-scroll" tabindex="0" role="region" aria-label="Tabla de sueldos con desplazamiento horizontal"><table class="payroll-table"><caption class="sr-only">Sueldos mensuales de profesores y funcionarios. Selecciona un nombre para ver su ficha.</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Puesto</th><th scope="col">Área / departamento</th><th scope="col" class="salary-heading">Sueldo mensual</th></tr></thead><tbody id="results" aria-busy="true"></tbody></table></div>
       <div class="results-footer"><p id="status" role="status" aria-live="polite">Cargando los datos públicos…</p><nav id="pagination" class="pagination" aria-label="Páginas de resultados" hidden><button id="previous-page" class="text-button" type="button">Anterior</button><span id="page-label"></span><button id="next-page" class="text-button" type="button">Siguiente</button></nav></div>
     </section>
-    <footer class="footer"><p>Abril–junio 2026 · Fuente: <a href="#fuente">PNT</a> · <a href="/data/2026/sueldo-2026.json" download>Descargar datos</a></p><p>Proyecto independiente. No afiliado a la UAA.</p></footer>
+    <footer class="footer"><p>Abril–junio 2026 · Fuente: <a href="#fuente">PNT</a> · <a href="/data/sueldo-2026.json" download>Descargar datos</a></p><p>Proyecto independiente. No afiliado a la UAA.</p></footer>
     <section id="fuente" class="source-note" aria-labelledby="source-title"><h2 id="source-title">La fuente, sin vueltas.</h2><p>Datos obtenidos de la <a href="https://consultapublicamx.plataformadetransparencia.org.mx" target="_blank" rel="noopener noreferrer">Plataforma Nacional de Transparencia</a>. Periodo: 1 de abril al 30 de junio de 2026. Actualización reportada: 2 de julio de 2026.</p><p>Bruto: antes de deducciones. Neto: después de deducciones. Importes mensuales en pesos mexicanos, no acumulados del trimestre. Área y departamento comparten el campo de adscripción publicado.</p><p>El filtro «Profesores» selecciona puestos cuya descripción comienza con «PROF.» o «PROFESOR». «Otros puestos» reúne los restantes; es una ayuda de consulta, no una clasificación oficial. El archivo no permite identificar todas las posibles funciones docentes. Se conservan los importes cero sin inferir su motivo.</p></section>
   </main>
   <dialog id="person-dialog" aria-labelledby="person-name">
@@ -52,6 +52,6 @@ import "../styles/global.css";
       <p id="share-status" class="share-status" role="status"></p><a class="source-reference" href="#fuente" id="dialog-source">Consultar fuente y contexto</a>
     </div>
   </dialog>
-  <noscript><p class="page">Activa JavaScript para buscar o <a href="/data/2026/sueldo-2026.json">consulta el archivo original</a>.</p></noscript>
+  <noscript><p class="page">Activa JavaScript para buscar o <a href="/data/sueldo-2026.json">consulta el archivo original</a>.</p></noscript>
 </body>
 </html>

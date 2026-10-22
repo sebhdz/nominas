@@ -1,4 +1,4 @@
-import source from "../../../../data/2026/sueldo-2026.json?raw";
+import source from "../../../../data/sueldo-2026.json?raw";
 
 export function GET() {
   return new Response(source, {
