@@ -1,16 +1,26 @@
-import { findPeople } from './search-utils.js';
+import { AVAILABLE_YEARS, DEFAULT_YEAR, findPeople } from './search-utils.js';
 
 const $ = selector => document.querySelector(selector);
 const search = $('#search');
 const results = $('#results');
 const status = $('#status');
 const dialog = $('#person-dialog');
+const year = $('#year');
 const area = $('#area');
 const order = $('#order');
 let group = 'all';
 const reset = $('#reset');
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 const PAGE_SIZE = 10;
+const YEAR_META = {
+  '2026': { footer: 'Abril–junio 2026', dialog: 'UAA · ABRIL—JUNIO 2026', updated: 'Información pública · Actualizada el 2 jul 2026' },
+  '2025': { footer: 'Ejercicio 2025', dialog: 'UAA · EJERCICIO 2025', updated: 'Información pública · Actualizada el 7 ene 2026' },
+  '2024': { footer: 'Ejercicio 2024', dialog: 'UAA · EJERCICIO 2024', updated: 'Información pública · Actualizada el 10 ene 2025' },
+  '2023': { footer: 'Ejercicio 2023', dialog: 'UAA · EJERCICIO 2023', updated: 'Información pública · Actualizada el 15 ene 2024' },
+  '2022': { footer: 'Ejercicio 2022', dialog: 'UAA · EJERCICIO 2022', updated: 'Información pública · Actualizada el 6 ene 2023' },
+};
+const cache = new Map();
+let activeYear = DEFAULT_YEAR;
 let people = [];
 let matches = [];
 let page = 1;
@@ -18,6 +28,11 @@ let selected = null;
 let ready = false;
 let searchTimer;
 let lastTrigger = null;
+let loadToken = 0;
+
+function selectedYear() {
+  return AVAILABLE_YEARS.includes(year.value) ? year.value : DEFAULT_YEAR;
+}
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -28,12 +43,39 @@ function element(tag, className, text) {
 
 function queryURL() {
   const url = new URL(location.href);
-  const values = { q: search.value.trim(), area: area.value, grupo: group === 'all' ? '' : group, orden: order.value === 'asc' ? 'menor' : '' };
+  const values = {
+    anio: activeYear !== DEFAULT_YEAR ? activeYear : '',
+    q: search.value.trim(),
+    area: area.value,
+    grupo: group === 'all' ? '' : group,
+    orden: order.value === 'asc' ? 'menor' : '',
+  };
   for (const [key, value] of Object.entries(values)) {
     if (value) url.searchParams.set(key, value);
     else url.searchParams.delete(key);
   }
   return url;
+}
+
+function updateYearLabels(targetYear) {
+  const meta = YEAR_META[targetYear] || YEAR_META[DEFAULT_YEAR];
+  $('#footer-period').textContent = meta.footer;
+  $('#person-period').textContent = meta.dialog;
+  $('#person-updated').textContent = meta.updated;
+  $('#download-link').href = `/data/sueldo-${targetYear}.json`;
+}
+
+function populateAreas(desiredArea = area.value) {
+  const areas = [...new Set(people.map(person => person.area))].sort((a, b) => a.localeCompare(b, 'es'));
+  area.replaceChildren(element('option', '', 'Todas las áreas'));
+  area.firstElementChild.value = '';
+  for (const name of areas) {
+    const option = element('option', '', readableLabel(name));
+    option.value = name;
+    area.append(option);
+  }
+  area.value = areas.includes(desiredArea) ? desiredArea : '';
+  area.disabled = false;
 }
 
 function readableName(value) {
@@ -94,7 +136,7 @@ function runSearch({ updateURL = true } = {}) {
   clearTimeout(searchTimer);
   page = 1;
   matches = findPeople(people, search.value, { area: area.value, group, order: order.value });
-  reset.hidden = !search.value && !area.value && group === 'all' && order.value === 'desc';
+  reset.hidden = !search.value && !area.value && group === 'all' && order.value === 'desc' && !year.value;
   $('.sort-note').textContent = `Ordenado por sueldo bruto, de ${order.value === 'asc' ? 'menor a mayor' : 'mayor a menor'} · MXN`;
   renderResults();
   if (updateURL) {
@@ -140,6 +182,7 @@ search.addEventListener('input', () => {
   searchTimer = setTimeout(runSearch, 120);
 });
 $('#search-form').addEventListener('submit', event => { event.preventDefault(); runSearch(); });
+year.addEventListener('change', () => { loadYear(selectedYear(), { updateURL: true }); });
 area.addEventListener('change', () => runSearch());
 order.addEventListener('change', () => runSearch());
 function setGroup(value) {
@@ -150,10 +193,10 @@ for (const button of document.querySelectorAll('[data-group]')) {
   button.addEventListener('click', () => { setGroup(button.dataset.group); runSearch(); });
 }
 reset.addEventListener('click', () => {
-  search.value = area.value = '';
+  search.value = area.value = year.value = '';
   order.value = 'desc';
   setGroup('all');
-  runSearch();
+  loadYear(DEFAULT_YEAR, { updateURL: true, desiredArea: '' });
   search.focus();
 });
 for (const [selector, change] of [['#previous-page', -1], ['#next-page', 1]]) {
@@ -186,48 +229,57 @@ $('#share-person').addEventListener('click', async () => {
 });
 $('#dialog-source').addEventListener('click', () => { dialog.close(); $('#fuente').classList.add('is-open'); });
 
-function restoreLocation() {
-  const url = new URL(location.href);
-  search.value = url.searchParams.get('q') || '';
-  area.value = url.searchParams.get('area') || '';
-  if (area.selectedIndex < 0) area.value = '';
-  const requestedGroup = url.searchParams.get('grupo');
-  order.value = url.searchParams.get('orden') === 'menor' ? 'asc' : 'desc';
-  setGroup(['professors', 'others'].includes(requestedGroup) ? requestedGroup : 'all');
-  runSearch({ updateURL: false });
-  const id = url.searchParams.get('persona');
-  const person = people.find(item => String(item.id) === id);
-  if (person) openPerson(person, search, false);
-  else if (dialog.open) dialog.close();
-  if (id && !person) status.textContent = 'Esa persona no aparece en este archivo. Puedes buscar por su nombre.';
-}
-window.addEventListener('popstate', restoreLocation);
-
-async function loadData() {
+async function loadYear(targetYear, { updateURL = true, desiredArea = area.value, restorePersonId = null } = {}) {
+  const token = ++loadToken;
+  if (!cache.has(targetYear)) {
+    ready = false;
+    results.setAttribute('aria-busy', 'true');
+    status.textContent = 'Cargando los datos públicos…';
+  }
   try {
-    const response = await fetch('/data/2026/buscador.json');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    people = await response.json();
-    if (!Array.isArray(people) || !people.length) throw new Error('Archivo vacío');
-    const areas = [...new Set(people.map(person => person.area))].sort((a, b) => a.localeCompare(b, 'es'));
-    area.replaceChildren(element('option', '', 'Todas las áreas'));
-    area.firstElementChild.value = '';
-    for (const name of areas) {
-      const option = element('option', '', readableLabel(name));
-      option.value = name;
-      area.append(option);
+    if (!cache.has(targetYear)) {
+      const response = await fetch(`/data/${targetYear}/buscador.json`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (!Array.isArray(data) || !data.length) throw new Error('Archivo vacío');
+      cache.set(targetYear, data);
     }
-    area.disabled = false;
+    if (token !== loadToken) return;
+    activeYear = targetYear;
+    people = cache.get(targetYear);
+    updateYearLabels(activeYear);
+    populateAreas(desiredArea);
     ready = true;
-    restoreLocation();
+    runSearch({ updateURL });
+    if (restorePersonId !== null) {
+      const person = people.find(item => String(item.id) === restorePersonId);
+      if (person) openPerson(person, search, false);
+      else if (dialog.open) dialog.close();
+      if (restorePersonId && !person) status.textContent = 'Esa persona no aparece en este archivo. Puedes buscar por su nombre.';
+    }
   } catch {
+    if (token !== loadToken) return;
     results.setAttribute('aria-busy', 'false');
     status.replaceChildren(element('span', '', 'No pudimos cargar los datos. '));
     const retry = element('button', 'text-button', 'Volver a intentar');
     retry.type = 'button';
-    retry.addEventListener('click', () => { status.textContent = 'Cargando los datos públicos…'; loadData(); });
+    retry.addEventListener('click', () => { loadYear(targetYear, { updateURL, desiredArea, restorePersonId }); });
     status.append(retry);
   }
 }
-loadData();
+
+function restoreLocation() {
+  const url = new URL(location.href);
+  const requestedYear = url.searchParams.get('anio');
+  year.value = AVAILABLE_YEARS.includes(requestedYear) ? requestedYear : '';
+  search.value = url.searchParams.get('q') || '';
+  const desiredArea = url.searchParams.get('area') || '';
+  const requestedGroup = url.searchParams.get('grupo');
+  order.value = url.searchParams.get('orden') === 'menor' ? 'asc' : 'desc';
+  setGroup(['professors', 'others'].includes(requestedGroup) ? requestedGroup : 'all');
+  const id = url.searchParams.get('persona');
+  loadYear(selectedYear(), { updateURL: false, desiredArea, restorePersonId: id });
+}
+window.addEventListener('popstate', restoreLocation);
+restoreLocation();
 

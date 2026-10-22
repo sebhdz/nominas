@@ -1,23 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { findPeople, isProfessor } from "../src/scripts/search-utils.js";
+import {
+  AVAILABLE_YEARS,
+  findPeople,
+  isProfessor,
+  parsePayrollJSON,
+  toPeople,
+} from "../src/scripts/search-utils.js";
 
-const records = JSON.parse(
-  await readFile(
-    new URL("../data/2026/sueldo-2026.json", import.meta.url),
-    "utf8",
-  ),
+const records = parsePayrollJSON(
+  await readFile(new URL("../data/sueldo-2026.json", import.meta.url), "utf8"),
 );
-const people = records.map((person) => ({
-  id: person.id_empleado,
-  nombre: person.nombre_completo,
-  area: person.area_adscripcion,
-  puesto: person.denominacion_cargo,
-  puesto_base: person.descripcion_puesto,
-  bruto: person.remuneracion_bruta_mensual,
-  neto: person.remuneracion_neta_mensual,
-}));
+const people = toPeople(records);
 
 test("busca con acentos y palabras en distinto orden; acepta área y puesto", () => {
   assert.ok(
@@ -93,5 +88,22 @@ test("ordena de menor a mayor, también con búsqueda y filtros", () => {
           index === 0 || matches[index - 1].bruto <= person.bruto,
       ),
     );
+  }
+});
+
+test("carga y deduplica por persona usando el registro más reciente en todos los años (2022–2026)", async () => {
+  for (const year of AVAILABLE_YEARS) {
+    const raw = await readFile(
+      new URL(`../data/sueldo-${year}.json`, import.meta.url),
+      "utf8",
+    );
+    const yearRecords = parsePayrollJSON(raw);
+    const yearPeople = toPeople(yearRecords);
+    const uniqueIds = new Set(yearPeople.map((person) => person.id));
+    assert.ok(yearPeople.length > 0);
+    assert.equal(uniqueIds.size, yearPeople.length);
+    const delia = findPeople(yearPeople, "DELIA ALMEIDA REYNOSO");
+    assert.equal(delia.length, 1);
+    assert.ok(delia[0].bruto > 0 && delia[0].neto > 0);
   }
 });

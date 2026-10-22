@@ -43,10 +43,10 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .primary-button:hover { color: white; }
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 13px; }
 .quick-filters { display: flex; flex-wrap: wrap; gap: 9px; }
-.filter-button, #area, #order { min-height: 42px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: transparent; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.filter-button, #year, #area, #order { min-height: 42px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: transparent; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .filter-button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
-.filter-button:hover:not([aria-pressed=true]), #area:hover, #order:hover { background: #e5d99e; }
-#order { cursor: pointer; }
+.filter-button:hover:not([aria-pressed=true]), #year:hover, #area:hover, #order:hover { background: #e5d99e; }
+#year, #order { cursor: pointer; }
 #area { max-width: 245px; text-overflow: ellipsis; padding-right: 24px; cursor: pointer; }
 .text-button { color: inherit; background: transparent; border: 0; padding: 5px 0; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
 .browse { margin-top: 32px; scroll-margin-top: 18px; }
@@ -122,7 +122,7 @@ body:has(dialog[open]) { overflow: hidden; }
       .search-label { font-size: 11px; }
   input[type=search] { padding: 15px 10px; font-size: 16px; }
   .primary-button { padding: 10px; min-width: 93px; font-size: 21px; }
-  .filter-button, #area, #order { font-size: 10px; padding: 10px; }
+  .filter-button, #year, #area, #order { font-size: 10px; padding: 10px; }
   #area { max-width: 100%; width: 100%; }
   .browse { margin-top: 25px; }
   .results-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
