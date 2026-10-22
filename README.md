@@ -21,7 +21,7 @@ npm run build
 npm run preview
 ```
 
-`npm run build` genera `dist/`, lista para un alojamiento estático. Astro genera también los archivos JSON de consulta y descarga a partir de `data/2026/nominas.json`; no hay que mantener copias manualmente ni ejecutar Python.
+`npm run build` genera `dist/`, lista para un alojamiento estático. Astro genera también los archivos JSON de consulta y descarga a partir de `data/2026/sueldo-2026.json`; no hay que mantener copias manualmente ni ejecutar Python.
 
 ## Alcance
 
@@ -38,6 +38,6 @@ Fuente: Plataforma Nacional de Transparencia, según la procedencia indicada por
 - `src/scripts/search.js`: interacción, ficha y enlaces.
 - `src/scripts/search-utils.js`: normalización y búsqueda.
 - `src/pages/data/2026/`: endpoints estáticos que generan el índice compacto y la descarga original durante la compilación.
-- `data/2026/nominas.json`: fuente original, sin modificaciones.
+- `data/sueldo-2026.json`: fuente original, sin modificaciones.
 
 El alcance actual corresponde a un solo periodo. Al incorporar históricos habrá que añadir la selección de periodo y actualizar las etiquetas de la interfaz.
