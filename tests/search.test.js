@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { findPeople, isProfessor } from '../src/scripts/search-utils.js';
+import { findPeople, findPensioners, isProfessor } from '../src/scripts/search-utils.js';
 
 const people = [
   { id: 1, nombre: 'DELIA ALMEIDA REYNOSO', area: 'COMUNICACION', puesto: 'JEFA DE PROTOCOLO', puesto_base: 'JEFA', bruto: 200, neto: 100 },
@@ -51,4 +51,23 @@ test('ordena de menor a mayor, también con búsqueda y filtros', () => {
 test('missing amounts are not treated as zero when sorting', () => {
   const sample = [...people, { id: 5, nombre: 'SIN IMPORTE', area: null, puesto: null, bruto: null, neto: null }];
   for (const order of ['asc', 'desc']) assert.equal(findPeople(sample, '', { order }).at(-1).id, 5);
+});
+
+test('pension search combines name, area, type and status with shared area and pension filters', () => {
+  const records = [
+    { id: 1, nombre: 'MARIA PEREZ', area: 'RECURSOS HUMANOS', tipo: 'Años de Servicio', estatus: 'Jubilado(a)', monto: 900, periodicidad: 'Quincenal' },
+    { id: 2, nombre: 'JOSE LOPEZ', area: 'FINANZAS', tipo: 'Pensión por viudez', estatus: 'Pensionado(a)', monto: 1200, periodicidad: 'Mensual' },
+  ];
+  assert.deepEqual(findPensioners(records, 'pension viudez', { area: 'FINANZAS', status: 'Pensionado(a)' }).map(({ id }) => id), [2]);
+  assert.deepEqual(findPensioners(records, 'maria años', { type: 'Años de Servicio' }).map(({ id }) => id), [1]);
+});
+
+test('pension amounts sort as reported without periodicity conversion; null stays last', () => {
+  const records = [
+    { id: 1, nombre: 'QUINCENAL', monto: 900, periodicidad: 'Quincenal' },
+    { id: 2, nombre: 'MENSUAL', monto: 1200, periodicidad: 'Mensual' },
+    { id: 3, nombre: 'SIN DATO', monto: null, periodicidad: null },
+  ];
+  assert.deepEqual(findPensioners(records, '').map(({ id }) => id), [2, 1, 3]);
+  assert.deepEqual(findPensioners(records, '', { order: 'asc' }).map(({ id }) => id), [1, 2, 3]);
 });

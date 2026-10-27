@@ -47,13 +47,19 @@ input[type=search]:focus-visible { outline: none; }
 input::placeholder { color: #6e7276; opacity: 1; }
 .primary-button { color: var(--ink); background: var(--accent); border: 0; border-left: 3px solid var(--ink); padding: 10px 30px; min-width: 170px; font: 900 27px/1 Impact, 'Arial Narrow', sans-serif; text-transform: uppercase; }
 .primary-button:hover { background: #e7bd58; }
+.dataset-tabs { display: flex; border-bottom: 2px solid var(--ink); margin-top: 10px; }
+.dataset-tab { min-height: 44px; padding: 11px 18px; border: 2px solid var(--ink); border-bottom: 0; background: transparent; color: var(--ink); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.dataset-tab + .dataset-tab { border-left: 0; }
+.dataset-tab[aria-selected=true] { background: var(--ink); color: var(--paper); }
+.dataset-tab:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 13px; }
-.quick-filters { display: flex; flex-wrap: wrap; gap: 9px; }
-.filter-button, #area, #order { min-height: 42px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: transparent; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.quick-filters, .pension-filters { display: flex; flex-wrap: wrap; gap: 9px; }
+.filter-button, #area, #order, #pension-type, #pension-status { min-height: 42px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: transparent; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .filter-button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
-.filter-button:hover:not([aria-pressed=true]), #area:hover, #order:hover { background: #dfd2bb; }
-#order { cursor: pointer; }
+.filter-button:hover:not([aria-pressed=true]), #area:hover, #order:hover, #pension-type:hover, #pension-status:hover { background: #dfd2bb; }
+#order, #pension-type, #pension-status { cursor: pointer; }
 #area { max-width: 245px; text-overflow: ellipsis; padding-right: 24px; cursor: pointer; }
+#pension-type, #pension-status { max-width: 240px; text-overflow: ellipsis; padding-right: 24px; }
 .text-button { color: inherit; background: transparent; border: 0; padding: 5px 0; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
 .browse { margin-top: 32px; scroll-margin-top: 18px; }
 .table-scroll { overflow-x: auto; }
@@ -82,6 +88,14 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .payroll-table tr:hover td:not(.salary-cell) { background: #f5efe5; }
 .empty-message h3 { font-size: 17px; margin: 8px 0; }
 .empty-message p { font-size: 13px; margin: 0 0 8px; font-weight: 400; }
+.data-message { border: 2px solid var(--ink); padding: 18px; background: var(--white); font-size: 13px; line-height: 1.6; }
+.pension-name { font-size: 20px; font-weight: 700; }
+.pension-status, .pension-period { display: block; margin-top: 5px; font-size: 11px; font-weight: 400; line-height: 1.5; }
+.pensions-notes { margin: 0 0 18px; padding: 16px 18px; border: 2px solid var(--ink); background: var(--white); font-size: 12px; line-height: 1.65; }
+.pensions-notes h2 { margin: 0 0 7px; font: 700 11px/1.4 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; letter-spacing: .7px; text-transform: uppercase; }
+.pensions-notes ul { margin: 0; padding-left: 18px; }
+.pensions-notes li + li { margin-top: 6px; }
+.pension-table .salary-cell .salary-label-small { white-space: normal; }
 .results-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 0; font-size: 11px; }
 #status { margin: 0; line-height: 1.6; }
 .pagination { display: flex; align-items: center; gap: 18px; white-space: nowrap; }
@@ -155,7 +169,7 @@ body:has(dialog[open]) { overflow: hidden; }
   .table-scroll { --mobile-salary-width: clamp(118px, 35%, 170px); overflow-x: visible; }
   .filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .quick-filters { grid-column: 1 / -1; }
-  #area, #order { width: 100%; max-width: none; min-width: 0; text-overflow: ellipsis; }
+  #area, #order, #pension-type, #pension-status { width: 100%; max-width: none; min-width: 0; text-overflow: ellipsis; }
   #reset { justify-self: start; }
   .mobile-table-heading { display: grid; grid-template-columns: minmax(0, 1fr) var(--mobile-salary-width); border: 2px solid var(--ink); border-bottom: 0; background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 600; }
   .mobile-table-heading span { padding: 12px; }

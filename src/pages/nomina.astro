@@ -11,27 +11,41 @@ import Page from "../layouts/Page.astro";
       <div class="hero-bottom"><p class="intro-copy">Sueldos de profesores y funcionarios. Se pagan con dinero público, así que se leen con ojos públicos.</p></div>
     </section>
     <p id="university-error" role="status" hidden></p>
-    <section id="payroll-search" class="search-section" aria-label="Buscar en la nómina">
+    <nav class="dataset-tabs" role="tablist" aria-label="Información de la universidad">
+      <button id="payroll-tab" class="dataset-tab" type="button" role="tab" aria-selected="true" aria-controls="payroll-panel">Nómina</button>
+      <button id="pensions-tab" class="dataset-tab" type="button" role="tab" aria-selected="false" aria-controls="pensions-panel" tabindex="-1" disabled>Pensionados</button>
+    </nav>
+    <section id="search-section" class="search-section" aria-label="Buscar registros">
       <form id="search-form" role="search" autocomplete="off">
-        <label class="search-label" for="search">Busca a tu profe</label>
-        <div class="search-box"><input id="search" type="search" name="q" placeholder="Nombre, puesto o departamento" aria-controls="results" maxlength="120" spellcheck="false" enterkeyhint="search"><button class="primary-button" type="submit">Ver sueldo</button></div>
+        <label id="search-label" class="search-label" for="search">Busca a tu profe</label>
+        <div class="search-box"><input id="search" type="search" name="q" placeholder="Nombre, puesto o departamento" aria-controls="results" maxlength="120" spellcheck="false" enterkeyhint="search"><button id="search-submit" class="primary-button" type="submit">Ver sueldo</button></div>
       </form>
       <div class="filters" aria-label="Filtros de resultados">
-        <div class="quick-filters" role="group" aria-label="Tipo de puesto"><button class="filter-button" type="button" data-group="all" aria-pressed="true">Todos</button><button class="filter-button" type="button" data-group="professors" aria-pressed="false">Profesores</button><button class="filter-button" type="button" data-group="others" aria-pressed="false">Otros puestos</button></div>
+        <div id="payroll-filters" class="quick-filters" role="group" aria-label="Tipo de puesto"><button class="filter-button" type="button" data-group="all" aria-pressed="true">Todos</button><button class="filter-button" type="button" data-group="professors" aria-pressed="false">Profesores</button><button class="filter-button" type="button" data-group="others" aria-pressed="false">Otros puestos</button></div>
         <label class="sr-only" for="area">Área o departamento</label><select id="area" disabled><option value="">Todas las áreas</option></select>
-        <label class="sr-only" for="order">Ordenar por sueldo bruto</label><select id="order"><option value="desc">Mayor a menor</option><option value="asc">Menor a mayor</option></select>
+        <div id="pension-filters" class="pension-filters" hidden>
+          <label class="sr-only" for="pension-type">Tipo de pensión</label><select id="pension-type"><option value="">Todos los tipos</option></select>
+          <label class="sr-only" for="pension-status">Estatus</label><select id="pension-status"><option value="">Todos los estatus</option></select>
+        </div>
+        <label id="order-label" class="sr-only" for="order">Ordenar por sueldo bruto</label><select id="order"><option value="desc">Mayor a menor</option><option value="asc">Menor a mayor</option></select>
         <button id="reset" class="text-button" type="button" hidden>Limpiar</button>
       </div>
     </section>
-    <section id="payroll-results" class="browse" aria-label="Resultados de búsqueda">
+    <section id="payroll-panel" class="browse" role="tabpanel" aria-labelledby="payroll-tab" aria-label="Nómina">
       <aside class="opinion-notice" aria-label="Cómo opinar sobre tu profesor">
         <strong>Ahora te toca opinar.</strong>
         <p>Toca un nombre para abrir su ficha y opinar sobre tu profe.</p>
       </aside>
-      <p class="sort-note">Ordenado por sueldo bruto, de mayor a menor · MXN</p>
+      <p id="payroll-sort-note" class="sort-note">Ordenado por sueldo bruto, de mayor a menor · MXN</p>
       <div class="table-scroll" tabindex="0" role="region" aria-label="Sueldos de profesores y funcionarios"><div class="mobile-table-heading" aria-hidden="true"><span>Info</span><span>Sueldo mensual</span></div><table class="payroll-table"><caption class="sr-only">Sueldos mensuales de profesores y funcionarios. Selecciona un nombre para ver su ficha.</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Puesto</th><th scope="col">Área / departamento</th><th scope="col" class="salary-heading">Sueldo mensual</th></tr></thead><tbody id="results" aria-busy="true"></tbody></table></div>
-      <div class="results-footer"><p id="status" role="status" aria-live="polite">Cargando los datos públicos…</p><nav id="pagination" class="pagination" aria-label="Páginas de resultados" hidden><button id="previous-page" class="text-button" type="button">Anterior</button><span id="page-label"></span><button id="next-page" class="text-button" type="button">Siguiente</button></nav></div>
     </section>
+    <section id="pensions-panel" class="browse" role="tabpanel" aria-labelledby="pensions-tab" aria-label="Pensionados" hidden>
+      <p id="pension-sort-note" class="sort-note">Ordenado por monto reportado, de mayor a menor · MXN</p>
+      <aside id="pensions-notes" class="pensions-notes" aria-label="Notas de la fuente" hidden><h2>Notas de la fuente</h2><ul id="pension-note-list"></ul></aside>
+      <p id="pensions-unavailable" class="data-message" role="status" hidden>No hay datos de pensiones disponibles para esta universidad.</p>
+      <div id="pensions-table-wrap" class="table-scroll" tabindex="0" role="region" aria-label="Personas pensionadas" hidden><div class="mobile-table-heading" aria-hidden="true"><span>Persona</span><span>Monto reportado</span></div><table class="payroll-table pensions-table"><caption class="sr-only">Personas pensionadas; los montos y su periodicidad se muestran como los reporta la fuente.</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Tipo de pensión</th><th scope="col">Área responsable</th><th scope="col" class="salary-heading">Monto reportado</th></tr></thead><tbody id="pension-results" aria-busy="true"></tbody></table></div>
+    </section>
+    <div class="results-footer"><p id="status" role="status" aria-live="polite">Cargando los datos públicos…</p><nav id="pagination" class="pagination" aria-label="Páginas de resultados" hidden><button id="previous-page" class="text-button" type="button">Anterior</button><span id="page-label"></span><button id="next-page" class="text-button" type="button">Siguiente</button></nav></div>
   </main>
   <dialog id="person-dialog" aria-labelledby="person-name">
     <div class="dialog-top"><span class="eyebrow">REMUNERACIÓN MENSUAL</span><button id="close-dialog" class="close-button" aria-label="Cerrar ficha" type="button">✕</button></div>

@@ -5,9 +5,10 @@ Start with the [README](README.md). Follow [project guidance](AGENTS.md) for sco
 ## Execution boundaries
 
 ```text
-Local preparation: PNT JSON → scripts/nominas/ → data/processed/ + local reports
-Static build:      data/processed/ → catalog + search JSONs + two HTML pages
-Browser:           catalog → selected university JSON → search, filters, table, dialog
+Payroll preparation: PNT JSON → scripts/nominas/ → data/processed/ + local reports
+Pension preparation: data/pensions/raw/*.json → scripts/pensiones/ → data/pensions/processed/
+Static build:        prepared data → catalog + payroll/pension search JSONs + HTML pages
+Browser:             catalog → selected dataset → shared search/area + dataset-specific filters
 ```
 
 Preparation runs only when invoked manually. The build reads prepared files already in the repository; it does not need raw downloads. Payroll browser requests retrieve static files, not a runtime API or filesystem listing. The separate [opinion service](aws/README.md) uses AWS and Turnstile; it is not part of payroll loading or preparation. Only each institution's latest prepared year is emitted. Older years may remain in Git but are not accessible as historical pages or search files.
@@ -46,9 +47,14 @@ An array with one entry per institution:
 | `period` | Object with ISO `inicio` and `fin` reporting dates. |
 | `updates` | Sorted array of distinct nonempty ISO source update dates. |
 | `records` | Number of records, not verified unique people. |
-| `url` | Static search-file path `/data/<id>/<year>.json`. |
+| `url` | Static payroll search-file path `/data/<id>/<year>.json`. |
+| `pensionUrl` | Static pension search-file path `/data/pensions/<id>.json`, or `null` when no prepared pension dataset exists. |
 
-The directory is rendered from this build-time discovery. The payroll controller fetches the catalog, looks up `university`, then fetches that entry's `url`. Missing/unknown identifiers produce a directory-oriented message; no different institution is loaded as a fallback.
+The directory is rendered from payroll discovery. The payroll controller fetches the catalog, looks up `university`, then fetches that entry's `url`. Pension URLs are joined only for matching payroll institutions; pension-only institutions do not enter the university directory. Missing/unknown identifiers produce a directory-oriented message; no different institution is loaded as a fallback. The Pensionados tab is present but disabled when `pensionUrl` is `null`; no unavailable or zero-record claim is implied.
+
+### Pension search file: `/data/pensions/<id>.json`
+
+PNT source files are stored in `data/pensions/raw/<ID>-pensiones.json`; `scripts/pensiones/` writes prepared files to `data/pensions/processed/<id>/pensiones.json`. The build discovers prepared files and emits `{ records, notes }`: a reduced array of person-level rows plus distinct source notes shown once above the results. Files containing only anonymous/explanatory rows do not create a static search route or enable the Pensionados tab. Source rows without a person name remain in prepared data but are not represented as people in the search file. Each browser record contains a source-hash/row ID, full name, area, pension type/status, reported amount, source periodicity, reporting period, and source update date. Amounts are not converted across periodicities or inferred as gross/net unless the source explicitly establishes that distinction. The page shares text search and area filtering between tabs; pension type/status filters and reported-amount ordering apply only to Pensionados, while professor-group filters and gross-pay ordering apply only to Nómina.
 
 ### Search file: `/data/<id>/<year>.json`
 

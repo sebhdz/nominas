@@ -1,18 +1,28 @@
-import { findPeople } from './search-utils.js';
+import { findPeople, findPensioners } from './search-utils.js';
 import { loadPerception, resetPerception, setupPerceptionListeners } from './votes.js';
 
 const $ = selector => document.querySelector(selector);
 const search = $('#search');
 const results = $('#results');
+const pensionResults = $('#pension-results');
 const status = $('#status');
 const dialog = $('#person-dialog');
 const area = $('#area');
 const order = $('#order');
+const pensionType = $('#pension-type');
+const pensionStatus = $('#pension-status');
 let group = 'all';
+let activeTab = 'payroll';
+let payrollOrder = 'desc';
+let pensionsOrder = 'desc';
 const reset = $('#reset');
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 const PAGE_SIZE = 15;
 let people = [];
+let pensioners = [];
+let pensionNotes = [];
+let pensionAvailable = false;
+let pensionLoadError = false;
 let matches = [];
 let page = 1;
 let selected = null;
@@ -20,8 +30,17 @@ let ready = false;
 let searchTimer;
 let lastTrigger = null;
 let pendingArea = '';
+let pendingPensionType = '';
+let pendingPensionStatus = '';
 let university;
 const formatMoney = value => Number.isFinite(value) ? money.format(value) : 'Sin dato';
+const formatPensionAmount = person => {
+  if (!Number.isFinite(person.monto)) return 'Sin dato';
+  const decimals = person.montoFuente?.split('.')[1]?.length ?? 2;
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency', currency: 'MXN', minimumFractionDigits: decimals, maximumFractionDigits: decimals,
+  }).format(person.monto);
+};
 const formatDate = value => value ? new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`)) : 'Sin fecha';
 const formatPeriod = period => `${formatDate(period.inicio)} – ${formatDate(period.fin)}`;
 
@@ -34,7 +53,20 @@ function element(tag, className, text) {
 
 function queryURL() {
   const url = new URL(location.href);
-  const values = { q: search.value.trim(), area: ready ? area.value : pendingArea, grupo: group === 'all' ? '' : group, orden: order.value === 'asc' ? 'menor' : '' };
+  const values = { q: search.value.trim(), area: area.value || pendingArea };
+  if (activeTab === 'payroll') {
+    values.grupo = group === 'all' ? '' : group;
+    values.orden = order.value === 'asc' ? 'menor' : '';
+    values.tipo = '';
+    values.estatus = '';
+    values.tab = '';
+  } else {
+    values.grupo = '';
+    values.orden = order.value === 'asc' ? 'menor' : '';
+    values.tipo = pensionType.value;
+    values.estatus = pensionStatus.value;
+    values.tab = 'pensiones';
+  }
   for (const [key, value] of Object.entries(values)) {
     if (value) url.searchParams.set(key, value);
     else url.searchParams.delete(key);
@@ -55,6 +87,15 @@ function readableLabel(value) {
   if (!value) return 'Sin dato';
   const text = value.toLocaleLowerCase('es-MX');
   return text.charAt(0).toLocaleUpperCase('es-MX') + text.slice(1);
+}
+
+function updatePagination() {
+  const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+  page = Math.min(page, pages);
+  $('#pagination').hidden = pages <= 1;
+  $('#page-label').textContent = `Página ${page} de ${pages}`;
+  $('#previous-page').disabled = page <= 1;
+  $('#next-page').disabled = page >= pages;
 }
 
 function renderResults() {
@@ -89,11 +130,138 @@ function renderResults() {
     results.append(row);
   }
   status.textContent = `Mostrando ${shown.length ? offset + 1 : 0}–${offset + shown.length} de ${matches.length.toLocaleString('es-MX')} registros`;
-  $('#pagination').hidden = pages <= 1;
-  $('#page-label').textContent = `Página ${page} de ${pages}`;
-  $('#previous-page').disabled = page <= 1;
-  $('#next-page').disabled = page >= pages;
+  updatePagination();
   results.setAttribute('aria-busy', 'false');
+}
+
+function renderPensionResults() {
+  pensionResults.replaceChildren();
+  if (!pensionAvailable) {
+    $('#pensions-unavailable').hidden = false;
+    $('#pensions-unavailable').textContent = pensionLoadError
+      ? 'No pudimos cargar los datos de pensiones. Intenta volver a cargar la página.'
+      : 'No hay datos de pensiones disponibles para esta universidad.';
+    $('#pensions-notes').hidden = true;
+    $('#pensions-table-wrap').hidden = true;
+    status.textContent = pensionLoadError ? 'No pudimos cargar los datos de pensiones.' : 'No hay datos de pensiones disponibles para esta universidad.';
+    $('#pagination').hidden = true;
+    pensionResults.setAttribute('aria-busy', 'false');
+    return;
+  }
+  $('#pensions-unavailable').hidden = true;
+  $('#pensions-table-wrap').hidden = false;
+  const noteList = $('#pension-note-list');
+  noteList.replaceChildren(...pensionNotes.map(note => element('li', '', note)));
+  $('#pensions-notes').hidden = pensionNotes.length === 0;
+  const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+  page = Math.min(page, pages);
+  const offset = (page - 1) * PAGE_SIZE;
+  const shown = matches.slice(offset, offset + PAGE_SIZE);
+  if (!matches.length) {
+    const row = element('tr');
+    const empty = element('td', 'empty-message');
+    empty.colSpan = 4;
+    empty.append(element('h3', '', 'No encontramos coincidencias.'), element('p', '', 'Prueba con otro nombre o limpia los filtros.'));
+    row.append(empty);
+    pensionResults.append(row);
+  }
+  for (const person of shown) {
+    const row = element('tr');
+    const nameCell = element('td', 'name-cell', readableName(person.nombre));
+    nameCell.classList.add('pension-name');
+    const typeCell = element('td', 'role-cell');
+    typeCell.append(element('span', '', readableLabel(person.tipo)), element('span', 'pension-status', readableLabel(person.estatus)));
+    if (person.periodo) typeCell.append(element('span', 'pension-period', `Periodo informado: ${formatPeriod(person.periodo)}`));
+    const areaCell = element('td', 'area-cell', readableLabel(person.area));
+    const amountCell = element('td', 'salary-cell');
+    amountCell.append(element('span', 'gross-value', formatPensionAmount(person)), element('span', 'salary-label-small', readableLabel(person.periodicidad || 'Periodicidad sin dato')));
+    row.append(nameCell, typeCell, areaCell, amountCell);
+    pensionResults.append(row);
+  }
+  status.textContent = `Mostrando ${shown.length ? offset + 1 : 0}–${offset + shown.length} de ${matches.length.toLocaleString('es-MX')} pensionados`;
+  updatePagination();
+  pensionResults.setAttribute('aria-busy', 'false');
+}
+
+function updateAreaOptions(records) {
+  const selectedArea = area.value || pendingArea;
+  const areas = [...new Set(records.map(person => person.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  area.replaceChildren(element('option', '', activeTab === 'pensions' ? 'Todas las áreas' : 'Todas las áreas'));
+  area.firstElementChild.value = '';
+  for (const name of areas) {
+    const option = element('option', '', readableLabel(name));
+    option.value = name;
+    area.append(option);
+  }
+  if (selectedArea && !areas.includes(selectedArea)) {
+    const option = element('option', '', readableLabel(selectedArea));
+    option.value = selectedArea;
+    area.append(option);
+  }
+  area.disabled = false;
+  area.value = selectedArea;
+  pendingArea = selectedArea;
+}
+
+function updatePensionOptions(records) {
+  for (const [control, key, label, pending] of [[pensionType, 'tipo', 'Todos los tipos', pendingPensionType], [pensionStatus, 'estatus', 'Todos los estatus', pendingPensionStatus]]) {
+    const selected = control.value || pending;
+    const values = [...new Set(records.map(person => person[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+    control.replaceChildren(element('option', '', label));
+    control.firstElementChild.value = '';
+    for (const value of values) {
+      const option = element('option', '', readableLabel(value));
+      option.value = value;
+      control.append(option);
+    }
+    if (selected && !values.includes(selected)) {
+      const option = element('option', '', readableLabel(selected));
+      option.value = selected;
+      control.append(option);
+    }
+    control.value = selected;
+    if (control.selectedIndex < 0) control.value = '';
+  }
+  pendingPensionType = pensionType.value;
+  pendingPensionStatus = pensionStatus.value;
+}
+
+function activateTab(tab, updateURL = true) {
+  const nextTab = tab === 'pensions' && pensionAvailable ? 'pensions' : 'payroll';
+  if (activeTab !== nextTab) {
+    if (activeTab === 'payroll') payrollOrder = order.value;
+    else pensionsOrder = order.value;
+  }
+  if (activeTab === 'payroll' && nextTab === 'pensions' && dialog.open) dialog.close();
+  activeTab = nextTab;
+  order.value = activeTab === 'payroll' ? payrollOrder : pensionsOrder;
+  const payroll = activeTab === 'payroll';
+  $('#payroll-tab').setAttribute('aria-selected', String(payroll));
+  $('#payroll-tab').tabIndex = payroll ? 0 : -1;
+  $('#pensions-tab').setAttribute('aria-selected', String(!payroll));
+  $('#pensions-tab').tabIndex = payroll ? -1 : 0;
+  $('#pensions-tab').disabled = !pensionAvailable;
+  $('#payroll-panel').hidden = !payroll;
+  $('#pensions-panel').hidden = payroll;
+  $('#payroll-filters').hidden = !payroll;
+  $('#pension-filters').hidden = payroll || !pensionAvailable;
+  $('#search-label').textContent = payroll ? 'Busca a tu profe' : 'Busca a una persona pensionada';
+  search.placeholder = payroll ? 'Nombre, puesto o departamento' : 'Nombre, tipo de pensión o área';
+  $('#search-submit').textContent = payroll ? 'Ver sueldo' : 'Buscar';
+  $('#order-label').textContent = payroll ? 'Ordenar por sueldo bruto' : 'Ordenar por monto reportado';
+  $('#order').setAttribute('aria-label', payroll ? 'Ordenar por sueldo bruto' : 'Ordenar por monto reportado');
+  if (ready) {
+    const records = payroll ? people : pensioners;
+    updateAreaOptions(records);
+    if (!payroll) updatePensionOptions(pensioners);
+  }
+  if (updateURL) {
+    const url = queryURL();
+    url.searchParams.delete('persona');
+    history.replaceState(null, '', url);
+  }
+  if (ready) runSearch({ updateURL: false });
+  else if (!payroll) renderPensionResults();
 }
 
 function runSearch({ updateURL = true } = {}) {
@@ -105,10 +273,22 @@ function runSearch({ updateURL = true } = {}) {
   }
   if (!ready) return;
   page = 1;
-  matches = findPeople(people, search.value, { area: area.value, group, order: order.value });
-  reset.hidden = !search.value && !area.value && group === 'all' && order.value === 'desc';
-  $('.sort-note').textContent = `Ordenado por sueldo bruto, de ${order.value === 'asc' ? 'menor a mayor' : 'mayor a menor'} · MXN`;
-  renderResults();
+  if (activeTab === 'pensions') {
+    matches = pensionAvailable ? findPensioners(pensioners, search.value, {
+      area: area.value,
+      type: pensionType.value,
+      status: pensionStatus.value,
+      order: order.value,
+    }) : [];
+    $('#pension-sort-note').textContent = `Ordenado por monto reportado, de ${order.value === 'asc' ? 'menor a mayor' : 'mayor a menor'} · MXN; se conserva la periodicidad de la fuente`;
+    reset.hidden = !search.value && !area.value && !pensionType.value && !pensionStatus.value && order.value === 'desc';
+    renderPensionResults();
+  } else {
+    matches = findPeople(people, search.value, { area: area.value, group, order: order.value });
+    $('#payroll-sort-note').textContent = `Ordenado por sueldo bruto, de ${order.value === 'asc' ? 'menor a mayor' : 'mayor a menor'} · MXN`;
+    reset.hidden = !search.value && !area.value && group === 'all' && order.value === 'desc';
+    renderResults();
+  }
 }
 
 function openPerson(person, trigger = search, updateURL = true) {
@@ -154,8 +334,14 @@ search.addEventListener('input', () => {
   searchTimer = setTimeout(runSearch, 120);
 });
 $('#search-form').addEventListener('submit', event => { event.preventDefault(); runSearch(); });
-area.addEventListener('change', () => runSearch());
-order.addEventListener('change', () => runSearch());
+area.addEventListener('change', () => { pendingArea = area.value; runSearch(); });
+order.addEventListener('change', () => {
+  if (activeTab === 'payroll') payrollOrder = order.value;
+  else pensionsOrder = order.value;
+  runSearch();
+});
+pensionType.addEventListener('change', () => runSearch());
+pensionStatus.addEventListener('change', () => runSearch());
 function setGroup(value) {
   group = value;
   document.querySelectorAll('[data-group]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.group === group)));
@@ -163,10 +349,24 @@ function setGroup(value) {
 for (const button of document.querySelectorAll('[data-group]')) {
   button.addEventListener('click', () => { setGroup(button.dataset.group); runSearch(); });
 }
+$('#payroll-tab').addEventListener('click', () => activateTab('payroll'));
+$('#pensions-tab').addEventListener('click', () => activateTab('pensions'));
+for (const [tab, panel] of [['#payroll-tab', 'payroll'], ['#pensions-tab', 'pensions']]) {
+  $(tab).addEventListener('keydown', event => {
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      const next = panel === 'payroll' ? 'pensions' : 'payroll';
+      if (next === 'pensions' && !pensionAvailable) return;
+      activateTab(next);
+      $(`#${next}-tab`).focus();
+    }
+  });
+}
 reset.addEventListener('click', () => {
   search.value = area.value = '';
   pendingArea = '';
   order.value = 'desc';
+  pensionType.value = pensionStatus.value = '';
   setGroup('all');
   runSearch();
   search.focus();
@@ -174,9 +374,10 @@ reset.addEventListener('click', () => {
 for (const [selector, change] of [['#previous-page', -1], ['#next-page', 1]]) {
   $(selector).addEventListener('click', () => {
     page += change;
-    renderResults();
-    results.querySelector('button')?.focus({ preventScroll: true });
-    $('.browse').scrollIntoView({ block: 'start' });
+    if (activeTab === 'pensions') renderPensionResults();
+    else renderResults();
+    document.querySelector(`#${activeTab === 'pensions' ? 'pension-results' : 'results'} button`)?.focus({ preventScroll: true });
+    document.querySelector(activeTab === 'pensions' ? '#pensions-panel' : '#payroll-panel').scrollIntoView({ block: 'start' });
   });
 }
 $('#share-person').addEventListener('click', async () => {
@@ -204,20 +405,30 @@ function restoreLocation() {
   const url = new URL(location.href);
   search.value = url.searchParams.get('q') || '';
   pendingArea = url.searchParams.get('area') || '';
-  if (ready) {
-    area.value = pendingArea;
-    if (area.selectedIndex < 0) area.value = '';
-  }
+  area.value = pendingArea;
   const requestedGroup = url.searchParams.get('grupo');
-  order.value = url.searchParams.get('orden') === 'menor' ? 'asc' : 'desc';
+  const requestedOrder = url.searchParams.get('orden') === 'menor' ? 'asc' : 'desc';
+  if (url.searchParams.get('tab') === 'pensiones') pensionsOrder = requestedOrder;
+  else payrollOrder = requestedOrder;
+  pendingPensionType = url.searchParams.get('tipo') || '';
+  pendingPensionStatus = url.searchParams.get('estatus') || '';
+  pensionType.value = pendingPensionType;
+  pensionStatus.value = pendingPensionStatus;
   setGroup(['professors', 'others'].includes(requestedGroup) ? requestedGroup : 'all');
+  const requestedTab = url.searchParams.get('tab') === 'pensiones' ? 'pensions' : 'payroll';
+  activeTab = 'payroll';
+  activateTab(requestedTab, false);
+  if (requestedTab === 'pensions' && !pensionAvailable) {
+    url.searchParams.delete('tab');
+    history.replaceState(null, '', url);
+  }
   runSearch({ updateURL: false });
   if (ready) restorePerson();
 }
 
 function restorePerson() {
   const url = new URL(location.href);
-  const id = url.searchParams.get('persona');
+  const id = activeTab === 'payroll' ? url.searchParams.get('persona') : null;
   const person = people.find(item => String(item.id) === id);
   if (person) openPerson(person, search, false);
   else if (dialog.open) dialog.close();
@@ -233,8 +444,10 @@ async function loadData() {
     const id = new URL(location.href).searchParams.get('university');
     university = catalog.find(item => item.id === id);
     if (!university) {
-      $('#payroll-search').hidden = true;
-      $('#payroll-results').hidden = true;
+      $('#search-section').hidden = true;
+      $('#payroll-panel').hidden = true;
+      $('#pensions-panel').hidden = true;
+      $('.dataset-tabs').hidden = true;
       $('#university-error').textContent = id ? 'Esa universidad no está disponible. Elige otra desde el directorio.' : 'Elige una universidad desde el directorio para consultar su nómina.';
       $('#university-error').hidden = false;
       return;
@@ -246,18 +459,27 @@ async function loadData() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     people = await response.json();
     if (!Array.isArray(people) || !people.length) throw new Error('Archivo vacío');
-    const areas = [...new Set(people.map(person => person.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
-    area.replaceChildren(element('option', '', 'Todas las áreas'));
-    area.firstElementChild.value = '';
-    for (const name of areas) {
-      const option = element('option', '', readableLabel(name));
-      option.value = name;
-      area.append(option);
+    if (university.pensionUrl) {
+      try {
+        const pensionResponse = await fetch(university.pensionUrl);
+        if (!pensionResponse.ok) throw new Error(`HTTP ${pensionResponse.status}`);
+        const pensionData = await pensionResponse.json();
+        pensioners = pensionData.records;
+        pensionNotes = pensionData.notes;
+        pensionAvailable = Array.isArray(pensioners) && Array.isArray(pensionNotes);
+        if (!pensionAvailable) pensionLoadError = true;
+      } catch {
+        pensionLoadError = true;
+      }
     }
-    area.disabled = false;
-    area.value = pendingArea;
-    if (area.selectedIndex < 0) area.value = '';
     ready = true;
+    const requestedTab = new URL(location.href).searchParams.get('tab') === 'pensiones' ? 'pensions' : 'payroll';
+    activateTab(requestedTab, false);
+    if (requestedTab === 'pensions' && !pensionAvailable) {
+      const url = new URL(location.href);
+      url.searchParams.delete('tab');
+      history.replaceState(null, '', url);
+    }
     runSearch({ updateURL: false });
     restorePerson();
   } catch {
@@ -272,4 +494,3 @@ async function loadData() {
 restoreLocation();
 loadData();
 setupPerceptionListeners();
-
