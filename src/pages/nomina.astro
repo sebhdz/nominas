@@ -18,7 +18,7 @@ import Page from "../layouts/Page.astro";
       </form>
       <div class="filters" aria-label="Filtros de resultados">
         <div class="quick-filters" role="group" aria-label="Tipo de puesto"><button class="filter-button" type="button" data-group="all" aria-pressed="true">Todos</button><button class="filter-button" type="button" data-group="professors" aria-pressed="false">Profesores</button><button class="filter-button" type="button" data-group="others" aria-pressed="false">Otros puestos</button></div>
-        <label class="sr-only" for="area">Área o departamento</label><select id="area" disabled><option value="">Todas las áreas</option></select>
+        <div class="area-combo"><label class="sr-only" for="area-input">Área o departamento</label><input id="area-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="area-list" placeholder="Todas las áreas" maxlength="120" spellcheck="false" autocomplete="off" disabled><ul id="area-list" role="listbox" aria-label="Áreas" hidden></ul><input id="area" type="hidden"></div>
         <label class="sr-only" for="order">Ordenar por sueldo bruto</label><select id="order"><option value="desc">Mayor a menor</option><option value="asc">Menor a mayor</option></select>
         <button id="reset" class="text-button" type="button" hidden>Limpiar</button>
       </div>
