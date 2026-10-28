@@ -1,4 +1,4 @@
-import { getProfessorKey } from '../lib/professor-key.js';
+import { getProfessorKey, getProfessorSlug } from '../lib/professor-key.js';
 import { createTurnstile } from './turnstile.js';
 
 const API_BASE_URL = 'https://vd3xlkw2cplwb2azb27434xd6y0wfmxh.lambda-url.us-east-2.on.aws';
@@ -282,6 +282,7 @@ async function castVote(choice, category = 'salary') {
         voter_token: getVoterToken(),
         university_id: currentUniversityId,
         full_name: currentFullName,
+        slug: getProfessorSlug(currentUniversityId, currentFullName),
       }),
     });
 

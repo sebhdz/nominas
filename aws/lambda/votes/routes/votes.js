@@ -62,6 +62,7 @@ votesRouter.post('/batch', async (c) => {
 
       results[profKey] = {
         prof_key: profKey,
+        slug: item.slug || null,
         university_id: item.university_id || null,
         full_name: item.full_name || null,
         recommends_yes: recYes,
@@ -107,6 +108,7 @@ votesRouter.get('/:prof_key', async (c) => {
 
     return c.json({
       prof_key: profKey,
+      slug: stats.slug || null,
       university_id: stats.university_id || null,
       full_name: stats.full_name || null,
       deserves_more: stats.deserves_more || 0,
@@ -134,7 +136,7 @@ votesRouter.post('/:prof_key', async (c) => {
     return c.json({ error: 'JSON inválido' }, 400);
   }
 
-  const { choice, category, voter_token, university_id, full_name } = body || {};
+  const { choice, category, voter_token, university_id, full_name, slug } = body || {};
 
   const isRecommend = category === 'recommend' || ['yes', 'no', 'cancel_recommend'].includes(choice);
   const isSalary = category === 'salary' || ['more', 'fair', 'less', 'cancel_salary'].includes(choice) || (!isRecommend && choice === 'cancel');
@@ -176,6 +178,10 @@ votesRouter.post('/:prof_key', async (c) => {
       const commonValues = {
         ':now': new Date().toISOString(),
       };
+      if (slug && typeof slug === 'string') {
+        setClauses.push('slug = if_not_exists(slug, :slug)');
+        commonValues[':slug'] = slug.trim();
+      }
       if (university_id && typeof university_id === 'string') {
         setClauses.push('university_id = if_not_exists(university_id, :uni)');
         commonValues[':uni'] = university_id.trim();
@@ -276,6 +282,7 @@ votesRouter.post('/:prof_key', async (c) => {
 
     return c.json({
       prof_key: profKey,
+      slug: fresh.slug || (typeof slug === 'string' ? slug.trim() : null),
       university_id: fresh.university_id || (typeof university_id === 'string' ? university_id.trim() : null),
       full_name: fresh.full_name || (typeof full_name === 'string' ? full_name.trim() : null),
       deserves_more: Math.max(0, fresh.deserves_more || 0),
