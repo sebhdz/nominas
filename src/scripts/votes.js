@@ -7,6 +7,8 @@ const STORAGE_SALARY_KEY = 'nominas_user_votes';
 const STORAGE_REC_KEY = 'nominas_user_recommendations';
 
 let currentProfKey = null;
+let currentUniversityId = null;
+let currentFullName = null;
 let currentSalaryStats = { deserves_more: 0, is_fair: 0, deserves_less: 0, total_votes: 0 };
 let currentRecStats = { recommends_yes: 0, recommends_no: 0, total_recommendations: 0, recommend_percentage: null };
 let currentSalaryChoice = null;
@@ -153,6 +155,8 @@ export async function loadPerception(universityId, fullName) {
   }
 
   currentProfKey = getProfessorKey(universityId, fullName);
+  currentUniversityId = universityId;
+  currentFullName = fullName;
   const salaryMap = getLocalMap(STORAGE_SALARY_KEY);
   const recMap = getLocalMap(STORAGE_REC_KEY);
 
@@ -213,6 +217,8 @@ export function resetPerception() {
     abortController = null;
   }
   currentProfKey = null;
+  currentUniversityId = null;
+  currentFullName = null;
   currentSalaryChoice = null;
   currentRecChoice = null;
   currentSalaryStats = { deserves_more: 0, is_fair: 0, deserves_less: 0, total_votes: 0 };
@@ -274,6 +280,8 @@ async function castVote(choice, category = 'salary') {
         choice: targetChoice,
         category,
         voter_token: getVoterToken(),
+        university_id: currentUniversityId,
+        full_name: currentFullName,
       }),
     });
 
@@ -345,4 +353,21 @@ export function setupPerceptionListeners() {
   if (btnMore) btnMore.addEventListener('click', () => castVote('more', 'salary'));
   if (btnFair) btnFair.addEventListener('click', () => castVote('fair', 'salary'));
   if (btnLess) btnLess.addEventListener('click', () => castVote('less', 'salary'));
+}
+
+export async function fetchBatchOpinions(profKeys) {
+  if (!Array.isArray(profKeys) || profKeys.length === 0) return {};
+  try {
+    const res = await fetch(`${API_BASE_URL}/votes/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keys: profKeys }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data && typeof data === 'object' && data.results ? data.results : {};
+  } catch {
+    return {};
+  }
 }
