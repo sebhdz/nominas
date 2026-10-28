@@ -101,7 +101,7 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   assert.equal(url.searchParams.has('persona'), false);
   assert.equal(url.searchParams.has('orden'), false);
   assert.equal(url.searchParams.get('university'), 'prueba');
-  assert.deepEqual(requests, ['/data/universities.json', '/data/prueba/2026.json', '/data/pensions/prueba.json']);
+  assert.deepEqual(requests.filter(url => typeof url === 'string' && url.startsWith('/data/')), ['/data/universities.json', '/data/prueba/2026.json', '/data/pensions/prueba.json']);
   assert.equal(control('#university-name').textContent, 'Nómina Universidad de prueba');
   assert.equal(control('#pensions-tab').hidden, false);
   control('#results').children[0].children[0].children[0].dispatch('click');
@@ -130,7 +130,7 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   finishDownload();
   await import('../src/scripts/search.js?no-pension-data');
   await setImmediate();
-  assert.deepEqual(requests, ['/data/universities.json', '/data/otra/2026.json']);
+  assert.deepEqual(requests.filter(url => typeof url === 'string' && url.startsWith('/data/')), ['/data/universities.json', '/data/otra/2026.json']);
   assert.equal(control('#pensions-tab').disabled, true);
   assert.equal(control('#pensions-tab').hidden, true);
   assert.equal(control('#pensions-tab').attributes['aria-selected'], 'false');

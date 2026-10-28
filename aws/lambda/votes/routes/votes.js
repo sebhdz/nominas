@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
 import crypto from 'node:crypto';
 
 const client = new DynamoDBClient({});
@@ -14,9 +14,77 @@ const RECOMMEND_CHOICES = ['yes', 'no', 'cancel', 'cancel_recommend'];
 
 export const votesRouter = new Hono();
 
+votesRouter.post('/batch', async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'JSON inválido' }, 400);
+  }
+
+  const { keys } = body || {};
+  if (!Array.isArray(keys)) {
+    return c.json({ error: 'keys debe ser un arreglo' }, 400);
+  }
+
+  const validKeys = Array.from(new Set(
+    keys
+      .filter(k => typeof k === 'string' && /^[a-z0-9_:-]{2,150}$/i.test(k.trim()))
+      .map(k => k.toLowerCase().trim())
+  )).slice(0, 100);
+
+  if (validKeys.length === 0) {
+    return c.json({ results: {} });
+  }
+
+  try {
+    const keysToFetch = validKeys.map(k => ({
+      PK: `PROF#${k}`,
+      SK: 'STATS',
+    }));
+
+    const res = await ddb.send(new BatchGetCommand({
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: keysToFetch,
+        },
+      },
+    }));
+
+    const items = res.Responses?.[TABLE_NAME] || [];
+    const results = {};
+    for (const item of items) {
+      const profKey = (item.PK || '').replace(/^PROF#/, '');
+      const totalRec = Math.max(0, item.total_recommendations || 0);
+      const recYes = Math.max(0, item.recommends_yes || 0);
+      const recNo = Math.max(0, item.recommends_no || 0);
+      const recommendPct = totalRec > 0 ? Math.round((recYes / totalRec) * 100) : null;
+
+      results[profKey] = {
+        prof_key: profKey,
+        university_id: item.university_id || null,
+        full_name: item.full_name || null,
+        recommends_yes: recYes,
+        recommends_no: recNo,
+        total_recommendations: totalRec,
+        recommend_percentage: recommendPct,
+        total_votes: Math.max(0, item.total_votes || 0),
+        deserves_more: Math.max(0, item.deserves_more || 0),
+        is_fair: Math.max(0, item.is_fair || 0),
+        deserves_less: Math.max(0, item.deserves_less || 0),
+      };
+    }
+
+    return c.json({ results });
+  } catch (err) {
+    console.error('Error en /votes/batch:', err);
+    return c.json({ error: 'Error al consultar lote de opiniones' }, 500);
+  }
+});
+
 votesRouter.use('/:prof_key', async (c, next) => {
   const profKey = c.req.param('prof_key');
-  if (!profKey || !/^[a-f0-9]{8,32}$/i.test(profKey)) {
+  if (!profKey || !/^[a-z0-9_:-]{2,150}$/i.test(profKey)) {
     return c.json({ error: 'prof_key inválido' }, 400);
   }
   await next();
@@ -39,6 +107,8 @@ votesRouter.get('/:prof_key', async (c) => {
 
     return c.json({
       prof_key: profKey,
+      university_id: stats.university_id || null,
+      full_name: stats.full_name || null,
       deserves_more: stats.deserves_more || 0,
       is_fair: stats.is_fair || 0,
       deserves_less: stats.deserves_less || 0,
@@ -64,7 +134,7 @@ votesRouter.post('/:prof_key', async (c) => {
     return c.json({ error: 'JSON inválido' }, 400);
   }
 
-  const { choice, category, voter_token } = body || {};
+  const { choice, category, voter_token, university_id, full_name } = body || {};
 
   const isRecommend = category === 'recommend' || ['yes', 'no', 'cancel_recommend'].includes(choice);
   const isSalary = category === 'salary' || ['more', 'fair', 'less', 'cancel_salary'].includes(choice) || (!isRecommend && choice === 'cancel');
@@ -102,6 +172,19 @@ votesRouter.post('/:prof_key', async (c) => {
     if (prevChoice !== choice || isCancel) {
       const transactItems = [];
 
+      const setClauses = ['updated_at = :now'];
+      const commonValues = {
+        ':now': new Date().toISOString(),
+      };
+      if (university_id && typeof university_id === 'string') {
+        setClauses.push('university_id = if_not_exists(university_id, :uni)');
+        commonValues[':uni'] = university_id.trim();
+      }
+      if (full_name && typeof full_name === 'string') {
+        setClauses.push('full_name = if_not_exists(full_name, :fn)');
+        commonValues[':fn'] = full_name.trim();
+      }
+
       if (isRecommend) {
         let deltaYes = 0;
         let deltaNo = 0;
@@ -117,12 +200,12 @@ votesRouter.post('/:prof_key', async (c) => {
           Update: {
             TableName: TABLE_NAME,
             Key: { PK: pk, SK: 'STATS' },
-            UpdateExpression: 'ADD recommends_yes :y, recommends_no :n, total_recommendations :t SET updated_at = :now',
+            UpdateExpression: `ADD recommends_yes :y, recommends_no :n, total_recommendations :t SET ${setClauses.join(', ')}`,
             ExpressionAttributeValues: {
+              ...commonValues,
               ':y': deltaYes,
               ':n': deltaNo,
               ':t': deltaTotal,
-              ':now': new Date().toISOString(),
             },
           },
         });
@@ -144,13 +227,13 @@ votesRouter.post('/:prof_key', async (c) => {
           Update: {
             TableName: TABLE_NAME,
             Key: { PK: pk, SK: 'STATS' },
-            UpdateExpression: 'ADD deserves_more :m, is_fair :f, deserves_less :l, total_votes :t SET updated_at = :now',
+            UpdateExpression: `ADD deserves_more :m, is_fair :f, deserves_less :l, total_votes :t SET ${setClauses.join(', ')}`,
             ExpressionAttributeValues: {
+              ...commonValues,
               ':m': deltaMore,
               ':f': deltaFair,
               ':l': deltaLess,
               ':t': deltaTotal,
-              ':now': new Date().toISOString(),
             },
           },
         });
@@ -193,6 +276,8 @@ votesRouter.post('/:prof_key', async (c) => {
 
     return c.json({
       prof_key: profKey,
+      university_id: fresh.university_id || (typeof university_id === 'string' ? university_id.trim() : null),
+      full_name: fresh.full_name || (typeof full_name === 'string' ? full_name.trim() : null),
       deserves_more: Math.max(0, fresh.deserves_more || 0),
       is_fair: Math.max(0, fresh.is_fair || 0),
       deserves_less: Math.max(0, fresh.deserves_less || 0),
