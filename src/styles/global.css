@@ -54,12 +54,21 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .dataset-tab:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 13px; }
 .quick-filters, .pension-filters { display: flex; flex-wrap: wrap; gap: 9px; }
-.filter-button, #area, #order, #pension-type, #pension-status { min-height: 42px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: transparent; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.filter-button, #area-input, #order, #pension-type, #pension-status { min-height: 42px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: transparent; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .filter-button[aria-pressed=true] { background: var(--ink); color: var(--paper); }
-.filter-button:hover:not([aria-pressed=true]), #area:hover, #order:hover, #pension-type:hover, #pension-status:hover { background: #dfd2bb; }
+.filter-button:hover:not([aria-pressed=true]), #order:hover, #pension-type:hover, #pension-status:hover { background: #dfd2bb; }
 #order, #pension-type, #pension-status { cursor: pointer; }
-#area { max-width: 245px; text-overflow: ellipsis; padding-right: 24px; cursor: pointer; }
 #pension-type, #pension-status { max-width: 240px; text-overflow: ellipsis; padding-right: 24px; }
+.area-combo { position: relative; }
+#area-input { width: 245px; text-overflow: ellipsis; padding-right: 32px; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23242321' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center; cursor: pointer; }
+#area-input:hover { background-color: #dfd2bb; }
+#area-input:focus { cursor: text; background-color: var(--white); }
+#area-input::placeholder { color: var(--ink); opacity: 1; }
+#area-list { position: absolute; z-index: 20; top: calc(100% - 2px); left: 0; width: max(100%, 380px); max-height: 320px; overflow-y: auto; margin: 0; padding: 0; list-style: none; border: 2px solid var(--ink); background: var(--white); }
+.area-option, .area-empty { padding: 10px 14px; font-size: 12px; line-height: 1.35; }
+.area-option { cursor: pointer; }
+.area-option:hover, .area-option[aria-selected=true] { background: #dfd2bb; }
+.area-empty { color: #6e7276; }
 .text-button { color: inherit; background: transparent; border: 0; padding: 5px 0; font-size: 11px; text-decoration: underline; text-underline-offset: 4px; }
 .browse { margin-top: 32px; scroll-margin-top: 18px; }
 .table-scroll { overflow-x: auto; }
@@ -163,7 +172,9 @@ body:has(dialog[open]) { overflow: hidden; }
   .table-scroll { --mobile-salary-width: clamp(118px, 35%, 170px); overflow-x: visible; }
   .filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .quick-filters { grid-column: 1 / -1; }
-  #area, #order, #pension-type, #pension-status { width: 100%; max-width: none; min-width: 0; text-overflow: ellipsis; }
+  .area-combo { min-width: 0; }
+  #area-input, #order, #pension-type, #pension-status { width: 100%; max-width: none; min-width: 0; text-overflow: ellipsis; }
+  #area-list { width: 100%; }
   #reset { justify-self: start; }
   .mobile-table-heading { display: grid; grid-template-columns: minmax(0, 1fr) var(--mobile-salary-width); border: 2px solid var(--ink); border-bottom: 0; background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 600; }
   .mobile-table-heading span { padding: 12px; }
@@ -195,8 +206,8 @@ body:has(dialog[open]) { overflow: hidden; }
       .search-label { font-size: 11px; }
   input[type=search] { padding: 15px 10px; font-size: 16px; }
   .primary-button { padding: 10px; min-width: 93px; font-size: 21px; }
-  .filter-button, #area, #order { font-size: 10px; padding: 10px; }
-  #area { max-width: 100%; width: 100%; }
+  .filter-button, #area-input, #order, #pension-type, #pension-status { font-size: 10px; padding: 10px; }
+  #area-input { padding-right: 32px; }
   .browse { margin-top: 25px; }
   .results-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
   .pagination { width: 100%; justify-content: space-between; }

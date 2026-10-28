@@ -1,4 +1,4 @@
-import { findPeople, findPensioners } from './search-utils.js';
+import { findPeople, findPensioners, normalize } from './search-utils.js';
 import { loadPerception, resetPerception, setupPerceptionListeners } from './votes.js';
 
 const $ = selector => document.querySelector(selector);
@@ -8,6 +8,11 @@ const pensionResults = $('#pension-results');
 const status = $('#status');
 const dialog = $('#person-dialog');
 const area = $('#area');
+const areaInput = $('#area-input');
+const areaList = $('#area-list');
+let areas = [];
+let areaOptions = [];
+let activeArea = -1;
 const order = $('#order');
 const pensionType = $('#pension-type');
 const pensionStatus = $('#pension-status');
@@ -166,22 +171,11 @@ function renderPensionResults() {
 
 function updateAreaOptions(records) {
   const selectedArea = area.value || pendingArea;
-  const areas = [...new Set(records.map(person => person.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
-  area.replaceChildren(element('option', '', activeTab === 'pensions' ? 'Todas las áreas' : 'Todas las áreas'));
-  area.firstElementChild.value = '';
-  for (const name of areas) {
-    const option = element('option', '', readableLabel(name));
-    option.value = name;
-    area.append(option);
-  }
-  if (selectedArea && !areas.includes(selectedArea)) {
-    const option = element('option', '', readableLabel(selectedArea));
-    option.value = selectedArea;
-    area.append(option);
-  }
-  area.disabled = false;
-  area.value = selectedArea;
-  pendingArea = selectedArea;
+  areas = [...new Set(records.map(person => person.area).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  if (selectedArea && !areas.includes(selectedArea)) areas.push(selectedArea);
+  areaInput.disabled = false;
+  setArea(selectedArea);
+  pendingArea = area.value;
 }
 
 function updatePensionOptions(records) {
@@ -316,7 +310,73 @@ search.addEventListener('input', () => {
   searchTimer = setTimeout(runSearch, 120);
 });
 $('#search-form').addEventListener('submit', event => { event.preventDefault(); runSearch(); });
-area.addEventListener('change', () => { pendingArea = area.value; runSearch(); });
+function chooseArea(value) {
+  area.value = pendingArea = value;
+  areaInput.value = value ? readableLabel(value) : '';
+  closeAreas();
+  runSearch();
+}
+
+function highlightArea(index) {
+  areaOptions[activeArea]?.setAttribute('aria-selected', 'false');
+  activeArea = index;
+  const option = areaOptions[index];
+  if (!option) return areaInput.removeAttribute('aria-activedescendant');
+  option.setAttribute('aria-selected', 'true');
+  areaInput.setAttribute('aria-activedescendant', option.id);
+  option.scrollIntoView({ block: 'nearest' });
+}
+
+function openAreas() {
+  // Si el texto es el área ya elegida, se muestra la lista completa.
+  const typed = areaInput.value === (area.value ? readableLabel(area.value) : '') ? '' : normalize(areaInput.value);
+  const names = ['', ...areas.filter(name => normalize(name).includes(typed))];
+  areaOptions = names.map((name, index) => {
+    const option = element('li', 'area-option', name ? readableLabel(name) : 'Todas las áreas');
+    option.id = `area-option-${index}`;
+    option.dataset.area = name;
+    option.setAttribute('role', 'option');
+    option.setAttribute('aria-selected', 'false');
+    option.addEventListener('mousedown', event => { event.preventDefault(); chooseArea(name); });
+    return option;
+  });
+  if (names.length === 1) areaOptions.push(element('li', 'area-empty', 'Sin coincidencias'));
+  areaList.replaceChildren(...areaOptions);
+  areaOptions = areaOptions.filter(option => option.id);
+  activeArea = -1;
+  areaInput.removeAttribute('aria-activedescendant');
+  areaList.hidden = false;
+  areaInput.setAttribute('aria-expanded', 'true');
+}
+
+function closeAreas() {
+  areaList.hidden = true;
+  areaInput.setAttribute('aria-expanded', 'false');
+  areaInput.removeAttribute('aria-activedescendant');
+}
+
+areaInput.addEventListener('click', openAreas);
+areaInput.addEventListener('focus', openAreas);
+areaInput.addEventListener('input', openAreas);
+areaInput.addEventListener('blur', () => {
+  closeAreas();
+  areaInput.value = area.value ? readableLabel(area.value) : '';
+});
+areaInput.addEventListener('keydown', event => {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    if (areaList.hidden) openAreas();
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    highlightArea((activeArea + step + areaOptions.length) % areaOptions.length);
+  } else if (event.key === 'Enter' && !areaList.hidden) {
+    event.preventDefault();
+    const index = activeArea >= 0 ? activeArea : (areaOptions.length > 1 ? 1 : 0);
+    chooseArea(areaOptions[index].dataset.area);
+  } else if (event.key === 'Escape' && !areaList.hidden) {
+    event.preventDefault();
+    closeAreas();
+  }
+});
 order.addEventListener('change', () => {
   if (activeTab === 'payroll') payrollOrder = order.value;
   else pensionsOrder = order.value;
@@ -345,7 +405,7 @@ for (const [tab, panel] of [['#payroll-tab', 'payroll'], ['#pensions-tab', 'pens
   });
 }
 reset.addEventListener('click', () => {
-  search.value = area.value = '';
+  search.value = area.value = areaInput.value = '';
   pendingArea = '';
   order.value = 'desc';
   pensionType.value = pensionStatus.value = '';
@@ -383,11 +443,17 @@ $('#share-person').addEventListener('click', async () => {
   }
 });
 
+function setArea(value) {
+  area.value = areas.includes(value) ? value : '';
+  areaInput.value = area.value ? readableLabel(area.value) : '';
+}
+
 function restoreLocation() {
   const url = new URL(location.href);
   search.value = url.searchParams.get('q') || '';
   pendingArea = url.searchParams.get('area') || '';
   area.value = pendingArea;
+  if (ready) setArea(pendingArea);
   const requestedGroup = url.searchParams.get('grupo');
   const requestedOrder = url.searchParams.get('orden') === 'menor' ? 'asc' : 'desc';
   if (url.searchParams.get('tab') === 'pensiones') pensionsOrder = requestedOrder;
