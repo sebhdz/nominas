@@ -19149,64 +19149,6 @@
     },
     {
       "origen": {
-        "fila": 661
-      },
-      "ejercicio": "2026",
-      "periodo": {
-        "inicio": "2026-04-01",
-        "fin": "2026-06-30"
-      },
-      "nombre": {
-        "nombres": "ANDRES",
-        "primerApellido": "QUINTANAR",
-        "segundoApellido": "STEPHANO"
-      },
-      "puesto": "PROF. INVEST. TITULAR",
-      "cargo": "PROF. INVEST. TITULAR",
-      "area": "FISIOLOGIA Y FARMACOLOGIA",
-      "clavePuesto": "200",
-      "tipoIntegrante": "Funcionaria (o)",
-      "sexo": "Hombre",
-      "remuneracionMensual": {
-        "bruto": 103172.78,
-        "neto": 64616.22,
-        "monedaBruto": "PESOS",
-        "monedaNeto": "PESOS"
-      },
-      "actualizacionFuente": "2026-07-02",
-      "nota": "SE COLOCA LA CANTIDAD BRUTA RECIBIDA POR EL FUNCIONARIO, YA QUE LAS DEDUCCIONES LEGALES SE DISMINUYERON EN LA COLUMNA DE MONTO DE LA REMUNERACIÓN NETA"
-    },
-    {
-      "origen": {
-        "fila": 662
-      },
-      "ejercicio": "2026",
-      "periodo": {
-        "inicio": "2026-04-01",
-        "fin": "2026-06-30"
-      },
-      "nombre": {
-        "nombres": "JOSE LUIS",
-        "primerApellido": "QUINTANAR",
-        "segundoApellido": "STEPHANO"
-      },
-      "puesto": "PROF. INVEST. TITULAR",
-      "cargo": "PROF. INVEST. TITULAR",
-      "area": "FISIOLOGIA Y FARMACOLOGIA",
-      "clavePuesto": "200",
-      "tipoIntegrante": "Funcionaria (o)",
-      "sexo": "Hombre",
-      "remuneracionMensual": {
-        "bruto": 98259.68,
-        "neto": 58992.93,
-        "monedaBruto": "PESOS",
-        "monedaNeto": "PESOS"
-      },
-      "actualizacionFuente": "2026-07-02",
-      "nota": "SE COLOCA LA CANTIDAD BRUTA RECIBIDA POR EL FUNCIONARIO, YA QUE LAS DEDUCCIONES LEGALES SE DISMINUYERON EN LA COLUMNA DE MONTO DE LA REMUNERACIÓN NETA"
-    },
-    {
-      "origen": {
         "fila": 663
       },
       "ejercicio": "2026",
@@ -22186,35 +22128,6 @@
       "remuneracionMensual": {
         "bruto": 15697.98,
         "neto": 12470.93,
-        "monedaBruto": "PESOS",
-        "monedaNeto": "PESOS"
-      },
-      "actualizacionFuente": "2026-07-02",
-      "nota": "SE COLOCA LA CANTIDAD BRUTA RECIBIDA POR EL FUNCIONARIO, YA QUE LAS DEDUCCIONES LEGALES SE DISMINUYERON EN LA COLUMNA DE MONTO DE LA REMUNERACIÓN NETA"
-    },
-    {
-      "origen": {
-        "fila": 766
-      },
-      "ejercicio": "2026",
-      "periodo": {
-        "inicio": "2026-04-01",
-        "fin": "2026-06-30"
-      },
-      "nombre": {
-        "nombres": "EVA MARIA",
-        "primerApellido": "SALINAS",
-        "segundoApellido": "MIRALLES"
-      },
-      "puesto": "PROF. INVEST. TITULAR",
-      "cargo": "PROF. INVEST. TITULAR",
-      "area": "MICROBIOLOGIA",
-      "clavePuesto": "200",
-      "tipoIntegrante": "Funcionaria (o)",
-      "sexo": "Mujer",
-      "remuneracionMensual": {
-        "bruto": 66932.5,
-        "neto": 38430.29,
         "monedaBruto": "PESOS",
         "monedaNeto": "PESOS"
       },

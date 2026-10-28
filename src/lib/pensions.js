@@ -12,6 +12,8 @@ export function toSearchPensions(data) {
     return [{
       id: `${data.fuente.sha256.slice(0, 16)}-${record.origen.fila}`,
       nombre,
+      nombres: names,
+      apellidos: surnames,
       area: record.area,
       estatus: record.estatus,
       tipo: record.tipo,
@@ -22,10 +24,6 @@ export function toSearchPensions(data) {
       actualizacion: record.actualizacionFuente,
     }];
   });
-}
-
-export function pensionNotes(data) {
-  return [...new Set(data.registros.map((record) => record.nota?.trim()).filter(Boolean))];
 }
 
 export async function readPensions(file) {
@@ -49,7 +47,6 @@ export async function discoverPensionDatasets(root = processedRoot) {
       id: institution.name,
       url: `/data/pensions/${institution.name}.json`,
       records,
-      notes: pensionNotes(data),
     });
   }
   return datasets.sort((a, b) => a.id.localeCompare(b.id));

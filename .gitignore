@@ -5,6 +5,8 @@ dist/
 *.zip
 data/raw/*
 !data/raw/.gitkeep
+data/pensions/raw/*
+!data/pensions/raw/.gitkeep
 data/reports/
 
 .env

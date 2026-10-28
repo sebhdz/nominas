@@ -1,5 +1,6 @@
 ---
 import Page from "../layouts/Page.astro";
+import RecordsTable from "../components/RecordsTable.astro";
 ---
 <Page title="Nómina · ¿Cuánto gana mi profe?">
   <Fragment slot="head"><script>import "../scripts/search.js";</script></Fragment>
@@ -13,7 +14,7 @@ import Page from "../layouts/Page.astro";
     <p id="university-error" role="status" hidden></p>
     <nav class="dataset-tabs" role="tablist" aria-label="Información de la universidad">
       <button id="payroll-tab" class="dataset-tab" type="button" role="tab" aria-selected="true" aria-controls="payroll-panel">Nómina</button>
-      <button id="pensions-tab" class="dataset-tab" type="button" role="tab" aria-selected="false" aria-controls="pensions-panel" tabindex="-1" disabled>Pensionados</button>
+      <button id="pensions-tab" class="dataset-tab" type="button" role="tab" aria-selected="false" aria-controls="pensions-panel" tabindex="-1" disabled hidden>Pensionados</button>
     </nav>
     <section id="search-section" class="search-section" aria-label="Buscar registros">
       <form id="search-form" role="search" autocomplete="off">
@@ -37,13 +38,12 @@ import Page from "../layouts/Page.astro";
         <p>Toca un nombre para abrir su ficha y opinar sobre tu profe.</p>
       </aside>
       <p id="payroll-sort-note" class="sort-note">Ordenado por sueldo bruto, de mayor a menor · MXN</p>
-      <div class="table-scroll" tabindex="0" role="region" aria-label="Sueldos de profesores y funcionarios"><div class="mobile-table-heading" aria-hidden="true"><span>Info</span><span>Sueldo mensual</span></div><table class="payroll-table"><caption class="sr-only">Sueldos mensuales de profesores y funcionarios. Selecciona un nombre para ver su ficha.</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Puesto</th><th scope="col">Área / departamento</th><th scope="col" class="salary-heading">Sueldo mensual</th></tr></thead><tbody id="results" aria-busy="true"></tbody></table></div>
+      <RecordsTable bodyId="results" regionLabel="Sueldos de profesores y funcionarios" caption="Sueldos mensuales de profesores y funcionarios. Selecciona un nombre para ver su ficha." columns={['Nombre', 'Puesto', 'Área / departamento', 'Sueldo mensual']} mobileAmountLabel="Sueldo mensual" />
     </section>
     <section id="pensions-panel" class="browse" role="tabpanel" aria-labelledby="pensions-tab" aria-label="Pensionados" hidden>
       <p id="pension-sort-note" class="sort-note">Ordenado por monto reportado, de mayor a menor · MXN</p>
-      <aside id="pensions-notes" class="pensions-notes" aria-label="Notas de la fuente" hidden><h2>Notas de la fuente</h2><ul id="pension-note-list"></ul></aside>
       <p id="pensions-unavailable" class="data-message" role="status" hidden>No hay datos de pensiones disponibles para esta universidad.</p>
-      <div id="pensions-table-wrap" class="table-scroll" tabindex="0" role="region" aria-label="Personas pensionadas" hidden><div class="mobile-table-heading" aria-hidden="true"><span>Persona</span><span>Monto reportado</span></div><table class="payroll-table pensions-table"><caption class="sr-only">Personas pensionadas; los montos y su periodicidad se muestran como los reporta la fuente.</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Tipo de pensión</th><th scope="col">Área responsable</th><th scope="col" class="salary-heading">Monto reportado</th></tr></thead><tbody id="pension-results" aria-busy="true"></tbody></table></div>
+      <RecordsTable wrapperId="pensions-table-wrap" bodyId="pension-results" regionLabel="Personas pensionadas" caption="Personas pensionadas; los montos y su periodicidad se muestran como los reporta la fuente." columns={['Nombre', 'Tipo de pensión', 'Área responsable', 'Monto reportado']} mobileAmountLabel="Monto reportado" hidden />
     </section>
     <div class="results-footer"><p id="status" role="status" aria-live="polite">Cargando los datos públicos…</p><nav id="pagination" class="pagination" aria-label="Páginas de resultados" hidden><button id="previous-page" class="text-button" type="button">Anterior</button><span id="page-label"></span><button id="next-page" class="text-button" type="button">Siguiente</button></nav></div>
   </main>

@@ -1,0 +1,11 @@
+---
+const { bodyId, regionLabel, caption, columns, mobileAmountLabel, wrapperId, hidden = false } = Astro.props;
+---
+<div id={wrapperId} class="table-scroll" tabindex="0" role="region" aria-label={regionLabel} hidden={hidden}>
+  <div class="mobile-table-heading" aria-hidden="true"><span>Info</span><span>{mobileAmountLabel}</span></div>
+  <table class="payroll-table">
+    <caption class="sr-only">{caption}</caption>
+    <thead><tr>{columns.map((label, index) => <th scope="col" class:list={{ 'salary-heading': index === columns.length - 1 }}>{label}</th>)}</tr></thead>
+    <tbody id={bodyId} aria-busy="true"></tbody>
+  </table>
+</div>

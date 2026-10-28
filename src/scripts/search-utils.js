@@ -28,7 +28,7 @@ export function findPensioners(records, query, { area = '', type = '', status = 
     if (area && person.area !== area) return false;
     if (type && person.tipo !== type) return false;
     if (status && person.estatus !== status) return false;
-    const text = normalize(`${person.nombre} ${person.area} ${person.tipo} ${person.estatus} ${person.nota}`);
+    const text = normalize(`${person.nombre} ${person.area} ${person.tipo} ${person.estatus}`);
     return terms.every(term => text.includes(term));
   }).sort((a, b) => {
     if (a.monto === null && b.monto !== null) return 1;

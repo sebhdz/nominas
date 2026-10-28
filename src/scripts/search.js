@@ -20,7 +20,6 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
 const PAGE_SIZE = 15;
 let people = [];
 let pensioners = [];
-let pensionNotes = [];
 let pensionAvailable = false;
 let pensionLoadError = false;
 let matches = [];
@@ -98,10 +97,10 @@ function updatePagination() {
   $('#next-page').disabled = page >= pages;
 }
 
-function renderResults() {
-  results.replaceChildren();
-  const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
-  page = Math.min(page, pages);
+// Both datasets use the same row structure and responsive styles.
+function renderTableResults(target, pension = false) {
+  target.replaceChildren();
+  updatePagination();
   const offset = (page - 1) * PAGE_SIZE;
   const shown = matches.slice(offset, offset + PAGE_SIZE);
   if (!matches.length) {
@@ -110,77 +109,59 @@ function renderResults() {
     empty.colSpan = 4;
     empty.append(element('h3', '', 'No encontramos coincidencias.'), element('p', '', 'Prueba con un apellido o limpia los filtros.'));
     row.append(empty);
-    results.append(row);
+    target.append(row);
   }
   for (const person of shown) {
     const row = element('tr');
     const nameCell = element('td', 'name-cell');
-    const button = element('button', 'person-link');
-    button.append(element('span', 'name-line', readableName(person.nombres)), element('span', 'name-line', readableName(person.apellidos)));
-    button.title = readableName(person.nombre);
-    button.type = 'button';
-    button.setAttribute('aria-label', `Ver sueldo de ${person.nombre}`);
-    button.addEventListener('click', () => openPerson(person, button));
-    nameCell.append(button);
-    const role = element('td', 'role-cell', readableLabel(person.puesto));
+    const name = element(pension ? 'span' : 'button', pension ? 'person-name' : 'person-link');
+    name.append(element('span', 'name-line', readableName(person.nombres)), element('span', 'name-line', readableName(person.apellidos)));
+    name.title = readableName(person.nombre);
+    if (!pension) {
+      name.type = 'button';
+      name.setAttribute('aria-label', `Ver sueldo de ${person.nombre}`);
+      name.addEventListener('click', () => openPerson(person, name));
+    }
+    nameCell.append(name);
+    const role = element('td', 'role-cell', readableLabel(pension ? person.tipo : person.puesto));
+    if (pension) {
+      role.append(element('span', 'record-detail', readableLabel(person.estatus)));
+      if (person.periodo) role.append(element('span', 'record-detail', `Periodo informado: ${formatPeriod(person.periodo)}`));
+    }
     const areaCell = element('td', 'area-cell', readableLabel(person.area));
     const salary = element('td', 'salary-cell');
-    salary.append(element('span', 'gross-value', formatMoney(person.bruto)), element('span', 'salary-label-small', 'Bruto mensual'), element('span', 'net-value', `${formatMoney(person.neto)} neto`));
+    salary.append(
+      element('span', 'gross-value', pension ? formatPensionAmount(person) : formatMoney(person.bruto)),
+      element('span', 'salary-label-small', pension ? readableLabel(person.periodicidad || 'Periodicidad sin dato') : 'Bruto mensual'),
+    );
+    if (!pension) salary.append(element('span', 'net-value', `${formatMoney(person.neto)} neto`));
     row.append(nameCell, role, areaCell, salary);
-    results.append(row);
+    target.append(row);
   }
   status.textContent = `Mostrando ${shown.length ? offset + 1 : 0}–${offset + shown.length} de ${matches.length.toLocaleString('es-MX')} registros`;
-  updatePagination();
-  results.setAttribute('aria-busy', 'false');
+  target.setAttribute('aria-busy', 'false');
+}
+
+function renderResults() {
+  renderTableResults(results);
 }
 
 function renderPensionResults() {
-  pensionResults.replaceChildren();
   if (!pensionAvailable) {
+    pensionResults.replaceChildren();
     $('#pensions-unavailable').hidden = false;
     $('#pensions-unavailable').textContent = pensionLoadError
       ? 'No pudimos cargar los datos de pensiones. Intenta volver a cargar la página.'
       : 'No hay datos de pensiones disponibles para esta universidad.';
-    $('#pensions-notes').hidden = true;
     $('#pensions-table-wrap').hidden = true;
-    status.textContent = pensionLoadError ? 'No pudimos cargar los datos de pensiones.' : 'No hay datos de pensiones disponibles para esta universidad.';
+    status.textContent = $('#pensions-unavailable').textContent;
     $('#pagination').hidden = true;
     pensionResults.setAttribute('aria-busy', 'false');
     return;
   }
   $('#pensions-unavailable').hidden = true;
   $('#pensions-table-wrap').hidden = false;
-  const noteList = $('#pension-note-list');
-  noteList.replaceChildren(...pensionNotes.map(note => element('li', '', note)));
-  $('#pensions-notes').hidden = pensionNotes.length === 0;
-  const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
-  page = Math.min(page, pages);
-  const offset = (page - 1) * PAGE_SIZE;
-  const shown = matches.slice(offset, offset + PAGE_SIZE);
-  if (!matches.length) {
-    const row = element('tr');
-    const empty = element('td', 'empty-message');
-    empty.colSpan = 4;
-    empty.append(element('h3', '', 'No encontramos coincidencias.'), element('p', '', 'Prueba con otro nombre o limpia los filtros.'));
-    row.append(empty);
-    pensionResults.append(row);
-  }
-  for (const person of shown) {
-    const row = element('tr');
-    const nameCell = element('td', 'name-cell', readableName(person.nombre));
-    nameCell.classList.add('pension-name');
-    const typeCell = element('td', 'role-cell');
-    typeCell.append(element('span', '', readableLabel(person.tipo)), element('span', 'pension-status', readableLabel(person.estatus)));
-    if (person.periodo) typeCell.append(element('span', 'pension-period', `Periodo informado: ${formatPeriod(person.periodo)}`));
-    const areaCell = element('td', 'area-cell', readableLabel(person.area));
-    const amountCell = element('td', 'salary-cell');
-    amountCell.append(element('span', 'gross-value', formatPensionAmount(person)), element('span', 'salary-label-small', readableLabel(person.periodicidad || 'Periodicidad sin dato')));
-    row.append(nameCell, typeCell, areaCell, amountCell);
-    pensionResults.append(row);
-  }
-  status.textContent = `Mostrando ${shown.length ? offset + 1 : 0}–${offset + shown.length} de ${matches.length.toLocaleString('es-MX')} pensionados`;
-  updatePagination();
-  pensionResults.setAttribute('aria-busy', 'false');
+  renderTableResults(pensionResults, true);
 }
 
 function updateAreaOptions(records) {
@@ -241,6 +222,7 @@ function activateTab(tab, updateURL = true) {
   $('#pensions-tab').setAttribute('aria-selected', String(!payroll));
   $('#pensions-tab').tabIndex = payroll ? -1 : 0;
   $('#pensions-tab').disabled = !pensionAvailable;
+  $('#pensions-tab').hidden = !pensionAvailable;
   $('#payroll-panel').hidden = !payroll;
   $('#pensions-panel').hidden = payroll;
   $('#payroll-filters').hidden = !payroll;
@@ -465,9 +447,9 @@ async function loadData() {
         if (!pensionResponse.ok) throw new Error(`HTTP ${pensionResponse.status}`);
         const pensionData = await pensionResponse.json();
         pensioners = pensionData.records;
-        pensionNotes = pensionData.notes;
-        pensionAvailable = Array.isArray(pensioners) && Array.isArray(pensionNotes);
-        if (!pensionAvailable) pensionLoadError = true;
+        const validPensions = Array.isArray(pensioners);
+        pensionAvailable = validPensions && pensioners.length > 0;
+        if (!validPensions) pensionLoadError = true;
       } catch {
         pensionLoadError = true;
       }

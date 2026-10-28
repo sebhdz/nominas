@@ -37,17 +37,17 @@ input:focus-visible, select:focus-visible { background-color: #f6ecdf; }
 .hero { padding: 38px 0 34px; }
 h1 { font: 900 clamp(72px, 10.7vw, 142px)/.94 Impact, 'Arial Narrow', 'Helvetica Neue', sans-serif; text-transform: uppercase; letter-spacing: -3px; margin: 0; max-width: 1000px; }
 .headline-accent { color: var(--accent-ink); }
-.hero-bottom { display: flex; gap: 35px; align-items: center; margin-top: 30px; }
+.hero-bottom { display: flex; gap: 35px; align-items: center; margin-top: 10px; }
 .intro-copy { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 600; line-height: 1.65; max-width: 590px; margin: 0; }
 .search-section { padding: 3px 0 0; }
-.search-label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 12px; }
+.search-label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; margin: 12px 0; }
 .search-box { display: flex; border: 3px solid var(--ink); background: var(--white); }
 input[type=search] { min-width: 0; width: 100%; color: var(--ink); border: 0; padding: 18px 20px; font-size: 17px; outline: none; border-radius: 0; background: transparent; }
 input[type=search]:focus-visible { outline: none; }
 input::placeholder { color: #6e7276; opacity: 1; }
 .primary-button { color: var(--ink); background: var(--accent); border: 0; border-left: 3px solid var(--ink); padding: 10px 30px; min-width: 170px; font: 900 27px/1 Impact, 'Arial Narrow', sans-serif; text-transform: uppercase; }
 .primary-button:hover { background: #e7bd58; }
-.dataset-tabs { display: flex; border-bottom: 2px solid var(--ink); margin-top: 10px; }
+.dataset-tabs { display: flex; border-bottom: 2px solid var(--ink); margin-top: 0; }
 .dataset-tab { min-height: 44px; padding: 11px 18px; border: 2px solid var(--ink); border-bottom: 0; background: transparent; color: var(--ink); font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .dataset-tab + .dataset-tab { border-left: 0; }
 .dataset-tab[aria-selected=true] { background: var(--ink); color: var(--paper); }
@@ -71,7 +71,7 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .payroll-table th:nth-child(3) { width: 24%; }
 .payroll-table th:nth-child(4) { width: 21%; }
 .payroll-table td { border-bottom: 1px solid var(--divider); padding: 18px 16px; background: var(--white); vertical-align: middle; overflow-wrap: break-word; line-height: 1.5; }
-.person-link { display: block; text-align: left; font-family: inherit; font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--ink); background: transparent; border: 0; padding: 3px 0; text-decoration: none; }
+.person-link, .person-name { display: block; text-align: left; font-family: inherit; font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--ink); background: transparent; border: 0; padding: 3px 0; text-decoration: none; }
 .name-line { display: block; }
 .person-link:hover { text-decoration: underline; text-underline-offset: 4px; }
 .role-cell, .area-cell { font-size: 14px; font-weight: 700; color: #625c52; text-align: center; }
@@ -79,7 +79,7 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .payroll-table .salary-cell { background: var(--accent); text-align: right; white-space: nowrap; overflow-wrap: normal; }
 .salary-heading { text-align: right; }
 .gross-value { display: block; font: 900 clamp(22px, 2.5vw, 31px)/1.1 Impact, 'Arial Narrow', sans-serif; font-variant-numeric: tabular-nums; }
-.salary-label-small { display: block; font-size: 10px; margin-top: 5px; text-transform: uppercase; }
+.salary-label-small { white-space: normal; display: block; font-size: 10px; margin-top: 5px; text-transform: uppercase; }
 .net-value { display: block; font-size: 12px; font-weight: 700; margin-top: 0; font-variant-numeric: tabular-nums; }
 .sort-note { margin: 0 0 12px; font-size: 12px; color: #5e574c; }
 .opinion-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 16px; padding: 11px 14px; border: 2px solid var(--ink); background: var(--accent); color: var(--ink); }
@@ -89,13 +89,7 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .empty-message h3 { font-size: 17px; margin: 8px 0; }
 .empty-message p { font-size: 13px; margin: 0 0 8px; font-weight: 400; }
 .data-message { border: 2px solid var(--ink); padding: 18px; background: var(--white); font-size: 13px; line-height: 1.6; }
-.pension-name { font-size: 20px; font-weight: 700; }
-.pension-status, .pension-period { display: block; margin-top: 5px; font-size: 11px; font-weight: 400; line-height: 1.5; }
-.pensions-notes { margin: 0 0 18px; padding: 16px 18px; border: 2px solid var(--ink); background: var(--white); font-size: 12px; line-height: 1.65; }
-.pensions-notes h2 { margin: 0 0 7px; font: 700 11px/1.4 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; letter-spacing: .7px; text-transform: uppercase; }
-.pensions-notes ul { margin: 0; padding-left: 18px; }
-.pensions-notes li + li { margin-top: 6px; }
-.pension-table .salary-cell .salary-label-small { white-space: normal; }
+.record-detail { display: block; margin-top: 5px; font-size: 11px; font-weight: 400; line-height: 1.5; }
 .results-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 0; font-size: 11px; }
 #status { margin: 0; line-height: 1.6; }
 .pagination { display: flex; align-items: center; gap: 18px; white-space: nowrap; }
@@ -181,7 +175,7 @@ body:has(dialog[open]) { overflow: hidden; }
   .payroll-table tr:last-child { border-bottom: 0; }
   .payroll-table td { display: block; min-width: 0; padding: 0; border: 0; background: var(--white); }
   .payroll-table .name-cell { grid-area: name; padding: 14px 12px 6px; }
-  .person-link { font-size: 17px; line-height: 1.3; padding: 0; }
+  .person-link, .person-name { font-size: 17px; line-height: 1.3; padding: 0; }
   .payroll-table .salary-cell { grid-area: salary; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; background: var(--accent); text-align: right; padding: 12px 8px; border-left: 1px solid var(--divider); }
   .gross-value { font-size: clamp(21px, 5.5vw, 30px); }
   .salary-label-small { margin-top: 3px; }

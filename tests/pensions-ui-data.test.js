@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { discoverPensionDatasets, pensionNotes, toSearchPensions } from '../src/lib/pensions.js';
+import { discoverPensionDatasets, toSearchPensions } from '../src/lib/pensions.js';
 import { discoverUniversities } from '../src/lib/payroll.js';
 
 const pensionData = (overrides = {}) => ({
@@ -36,17 +36,12 @@ test('pension projection creates source-row links and excludes non-person rows',
   assert.equal(records.length, 1);
   assert.equal(records[0].id, 'abcdef1234567890-1');
   assert.equal(records[0].nombre, 'ANA PEREZ LOPEZ');
+  assert.equal(records[0].nombres, 'ANA');
+  assert.equal(records[0].apellidos, 'PEREZ LOPEZ');
   assert.equal(records[0].monto, 1200);
   assert.equal(records[0].montoFuente, '1200.00');
   assert.equal(records[0].periodicidad, 'Quincenal');
   assert.equal(Object.hasOwn(records[0], 'nota'), false);
-});
-
-test('pension notes are deduplicated at dataset level while preserving distinct wording', () => {
-  const data = pensionData();
-  data.registros[1].nota = 'Fuente original';
-  data.registros.push({ ...data.registros[0], origen: { fila: 3 }, nota: 'Otra nota de la fuente.' });
-  assert.deepEqual(pensionNotes(data), ['Fuente original', 'Otra nota de la fuente.']);
 });
 
 test('pension discovery emits only available datasets from matching directories', async (t) => {

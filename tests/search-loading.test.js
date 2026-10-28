@@ -61,12 +61,13 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
       if (url === '/data/universities.json') return { ok: true, json: async () => [
         { id: 'prueba', name: 'Universidad de prueba', period: { inicio: '2026-04-01', fin: '2026-06-30' }, updates: ['2026-07-02'], url: '/data/prueba/2026.json', pensionUrl: '/data/pensions/prueba.json' },
         { id: 'otra', url: '/data/otra/2026.json', pensionUrl: null },
+        { id: 'vacia', url: '/data/vacia/2026.json', pensionUrl: '/data/pensions/vacia.json' },
       ] };
+      if (url === '/data/pensions/vacia.json') return { ok: true, json: async () => ({ records: [] }) };
       if (url === '/data/pensions/prueba.json') return { ok: true, json: async () => ({
-        notes: ['Nota común de la fuente'],
         records: [
-          { id: 'p1', nombre: 'ANDRES GURROLA', area: 'COMUNICACION', tipo: 'Años de Servicio', estatus: 'Jubilado(a)', monto: 1500, periodicidad: 'Quincenal' },
-          { id: 'p2', nombre: 'DELIA ALMEIDA', area: 'FINANZAS', tipo: 'Viudez', estatus: 'Pensionado(a)', monto: 800, periodicidad: 'Mensual' },
+          { id: 'p1', nombre: 'ANDRES GURROLA', nombres: 'ANDRES', apellidos: 'GURROLA', area: 'COMUNICACION', tipo: 'Años de Servicio', estatus: 'Jubilado(a)', monto: 1500, periodicidad: 'Quincenal' },
+          { id: 'p2', nombre: 'DELIA ALMEIDA', nombres: 'DELIA', apellidos: 'ALMEIDA', area: 'FINANZAS', tipo: 'Viudez', estatus: 'Pensionado(a)', monto: 800, periodicidad: 'Mensual' },
         ],
       }) };
       return { ok: true, json: async () => [
@@ -102,6 +103,7 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   assert.equal(url.searchParams.get('university'), 'prueba');
   assert.deepEqual(requests, ['/data/universities.json', '/data/prueba/2026.json', '/data/pensions/prueba.json']);
   assert.equal(control('#university-name').textContent, 'Nómina Universidad de prueba');
+  assert.equal(control('#pensions-tab').hidden, false);
   control('#results').children[0].children[0].children[0].dispatch('click');
   assert.equal(new URL(location.href).searchParams.get('university'), 'prueba');
   assert.equal(new URL(location.href).searchParams.get('persona'), '2');
@@ -113,12 +115,15 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   assert.equal(control('#area').value, 'COMUNICACION');
   assert.equal(new URL(location.href).searchParams.get('tab'), 'pensiones');
   assert.equal(control('#pension-results').children.length, 1);
-  assert.equal(control('#pension-results').children[0].children[0].textContent, 'Andres Gurrola');
+  const pensionRow = control('#pension-results').children[0];
+  assert.equal(pensionRow.children.length, 4);
+  const pensionName = pensionRow.children[0].children[0];
+  assert.equal(pensionName.children[0].textContent, 'Andres');
+  assert.equal(pensionName.children[1].textContent, 'Gurrola');
+  assert.equal(pensionName.listeners.click, undefined, 'pension names do not open payroll voting');
+  assert.equal(pensionRow.children[3].children.length, 2, 'pensions do not invent a net amount');
   assert.match(control('#pension-results').children[0].children[3].children[1].textContent, /Quincenal/);
-  assert.equal(control('#pension-note-list').children.length, 1);
-  assert.equal(control('#pension-note-list').children[0].textContent, 'Nota común de la fuente');
-  assert.equal(control('#pensions-notes').hidden, false);
-  assert.equal(control('#pension-results').children[0].children[1].children.length, 2);
+  assert.equal(control('#pension-results').children[0].children[1].children.length, 1);
 
   location.href = 'http://localhost/nomina/?university=otra&tab=pensiones';
   requests.length = 0;
@@ -127,9 +132,17 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   await setImmediate();
   assert.deepEqual(requests, ['/data/universities.json', '/data/otra/2026.json']);
   assert.equal(control('#pensions-tab').disabled, true);
+  assert.equal(control('#pensions-tab').hidden, true);
   assert.equal(control('#pensions-tab').attributes['aria-selected'], 'false');
   assert.equal(control('#pensions-panel').hidden, true);
   assert.equal(new URL(location.href).searchParams.has('tab'), false);
+
+  location.href = 'http://localhost/nomina/?university=vacia';
+  await import('../src/scripts/search.js?empty-pension-data');
+  await setImmediate();
+  assert.equal(control('#pensions-tab').hidden, true);
+  assert.equal(control('#pensions-tab').disabled, true);
+  assert.equal(control('#pensions-panel').hidden, true);
 
   // An unknown identifier must not silently load another university's payroll.
   location.href = 'http://localhost/nomina/?university=unknown';
