@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { discoverUniversities, toSearchPeople } from '../src/lib/payroll.js';
+import { discoverUniversities, getSearchDataset, toSearchPeople } from '../src/lib/payroll.js';
 
 function dataset(overrides = {}) {
   return {
@@ -67,4 +67,20 @@ test('display does not append surnames already present at the end of the given-n
   assert.equal(person.nombres, 'ANA');
   assert.equal(person.apellidos, 'PEREZ');
   assert.equal(raw.registros[0].nombre.nombres, 'ANA PEREZ');
+});
+
+test('discovers prepared uag dataset with valid metadata and search projection', async () => {
+  const catalog = await discoverUniversities();
+  const uag = catalog.find((item) => item.id === 'uag');
+  assert.ok(uag, 'uag must be present in discovered catalog');
+  assert.equal(uag.name, 'Universidad de Guanajuato');
+  assert.equal(uag.year, '2026');
+  assert.equal(uag.url, '/data/uag/2026.json');
+  assert.equal(uag.records, 1991);
+  assert.deepEqual(uag.period, { inicio: '2026-04-01', fin: '2026-06-30' });
+
+  const people = await getSearchDataset('uag', '2026');
+  assert.equal(people.length, 1991);
+  assert.ok(people.every((p) => typeof p.id === 'string' && p.id.startsWith('8b11f7781ca1228b-')));
+  assert.ok(people.every((p) => p.nombre && typeof p.bruto === 'number'));
 });
