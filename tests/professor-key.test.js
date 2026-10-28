@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getProfessorKey } from '../src/lib/professor-key.js';
+import { getProfessorKey, getProfessorSlug } from '../src/lib/professor-key.js';
 
 test('getProfessorKey is deterministic across case, accents, and spacing', () => {
   const key1 = getProfessorKey('uaa', 'ANA PÉREZ');
@@ -9,7 +9,7 @@ test('getProfessorKey is deterministic across case, accents, and spacing', () =>
 
   assert.equal(key1, key2);
   assert.equal(key2, key3);
-  assert.equal(key1, 'uaa:ana-perez');
+  assert.match(key1, /^[a-f0-9]{16}$/);
 });
 
 test('getProfessorKey distinguishes different universities and names', () => {
@@ -19,14 +19,17 @@ test('getProfessorKey distinguishes different universities and names', () => {
 
   assert.notEqual(keyUAA, keyUNAM);
   assert.notEqual(keyUAA, keyDifferentName);
-  assert.equal(keyUAA, 'uaa:ana-perez');
-  assert.equal(keyUNAM, 'unam:ana-perez');
-  assert.equal(keyDifferentName, 'uaa:juan-lopez');
 });
 
 test('getProfessorKey handles null or empty inputs gracefully', () => {
   const keyEmpty = getProfessorKey('', '');
-  assert.equal(keyEmpty, 'desconocido');
+  assert.match(keyEmpty, /^[a-f0-9]{16}$/);
   const keyNull = getProfessorKey(null, null);
   assert.equal(keyEmpty, keyNull);
+});
+
+test('getProfessorSlug generates human-readable slug with colon', () => {
+  assert.equal(getProfessorSlug('uaa', 'ANA PÉREZ'), 'uaa:ana-perez');
+  assert.equal(getProfessorSlug('uaa', 'JUAN CARLOS ARREDONDO HERNANDEZ'), 'uaa:juan-carlos-arredondo-hernandez');
+  assert.equal(getProfessorSlug('', ''), 'desconocido');
 });
