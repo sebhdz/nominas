@@ -64,8 +64,19 @@ import RecordsTable from "../components/RecordsTable.astro";
         <div class="salaries"><div><span class="salary-label">BRUTO</span><strong id="person-gross"></strong></div><div><span class="salary-label">NETO</span><strong id="person-net"></strong></div></div>
         <div class="salary-meta"><p id="person-period" class="person-period"></p></div>
       </section>
+      <details id="person-benefits" class="person-benefits" hidden>
+        <summary>
+          <span class="benefits-heading">Percepciones y prestaciones</span>
+          <span class="benefits-intro">Consulta los conceptos adicionales que publica la institución.</span>
+          <span class="benefits-toggle"><span class="benefits-open-label">Ver desglose</span><span class="benefits-close-label">Cerrar desglose</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+        </summary>
+        <p class="benefits-note">Importes en MXN. Se muestran por separado, sin sumarlos al sueldo mensual.</p>
+        <p id="benefits-status" role="status" aria-live="polite"></p>
+        <button id="benefits-retry" class="text-button" type="button" hidden>Reintentar</button>
+        <ul id="benefits-list"></ul>
+      </details>
       <section class="opinions-section" aria-label="Opiniones de visitantes">
-        <p class="opinions-title">OPINIONES DE VISITANTES</p>
+        <p class="opinions-title">OPINIONES DE VISITANTES ACUMULADAS</p>
         <p class="opinion-context">Participación abierta de visitantes; no es una encuesta representativa.</p>
       <div class="vote-verification">
         <div id="vote-turnstile" data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || ''}></div>

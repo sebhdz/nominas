@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { campos, parseAmount, parseDate, prepare } from '../scripts/nominas/prepare.js';
+import { campos, categoriasAdicionales, parseAmount, parseDate, prepare } from '../scripts/nominas/prepare.js';
 import { prepareYear, runPipeline } from '../scripts/nominas/index.js';
+import { readPreparedJson } from '../src/lib/prepared-json.js';
 
 function fixture(overrides = {}) {
   const values = {
@@ -18,6 +19,84 @@ function fixture(overrides = {}) {
 }
 const source = { archivo: 'data/raw/prueba.json', sha256: 'test' };
 const run = (raw) => prepare(raw, source, '2026');
+
+function withAdditional(definition, concepts) {
+  const raw = fixture();
+  raw.columnas.push(definition.columna);
+  raw.filas[0].push(concepts);
+  return raw;
+}
+
+test('all 13 additional categories map by header and preserve source amounts without adding to pay', () => {
+  assert.equal(categoriasAdicionales.length, 13);
+  for (const definition of categoriasAdicionales) {
+    const original = Object.fromEntries(Object.entries(definition.campos).map(([field, header]) => [header, {
+      idFuente: 'source-id', concepto: ' Beneficio publicado ', periodicidad: 'CCT 73',
+      bruto: '123.4567', neto: '-', moneda: 'PESOS',
+    }[field]]));
+    const raw = withAdditional(definition, [original, original]);
+    raw.columnas.reverse();
+    raw.filas[0].reverse();
+    raw.columnas = raw.columnas.map(h => ` ${h.toUpperCase()} `);
+    const before = structuredClone(raw);
+    const { candidato, reporte } = run(raw);
+    assert.equal(reporte.errores, 0);
+    assert.equal(candidato.version, 3);
+    const record = candidato.registros[0];
+    assert.equal(record.remuneracionMensual.bruto, 1000.25);
+    const group = record.percepcionesAdicionales[0];
+    assert.equal(group.categoria, definition.categoria);
+    assert.equal(group.origen.columna, raw.columnas[0]);
+    assert.equal(group.conceptos.length, 2, 'do not deduplicate concepts');
+    assert.equal(group.conceptos[0].concepto, 'Beneficio publicado');
+    assert.equal(group.conceptos[0].periodicidad, 'CCT 73');
+    assert.deepEqual(group.conceptos.map(c => c.origen.elemento), [1, 2]);
+    if (definition.especie) assert.equal('bruto' in group.conceptos[0], false);
+    else {
+      assert.equal(group.conceptos[0].bruto, 123.4567);
+      assert.equal(group.conceptos[0].neto, null);
+      assert.deepEqual(group.conceptos[0].importesFuente, { bruto: '123.4567', neto: '-' });
+      assert.equal(reporte.conteos.importe_adicional_invalido, 2);
+    }
+    assert.deepEqual(raw, before);
+  }
+});
+
+test('additional extraction preserves zeros, negative amounts, absence and explanatory text', () => {
+  const definition = categoriasAdicionales[0];
+  const raw = withAdditional(definition, [
+    { [definition.campos.bruto]: '0', [definition.campos.neto]: '-12.50',
+      [definition.campos.concepto]: 'NO APLICA', [definition.campos.periodicidad]: 'Pago en diciembre' },
+    {},
+  ]);
+  const concepts = run(raw).candidato.registros[0].percepcionesAdicionales[0].conceptos;
+  assert.equal(concepts[0].bruto, 0);
+  assert.equal(concepts[0].neto, -12.5);
+  assert.equal(concepts[0].concepto, 'NO APLICA');
+  assert.equal(concepts[0].periodicidad, 'Pago en diciembre');
+  assert.equal(concepts[1].bruto, null);
+  for (const value of [null, '', []]) {
+    const group = run(withAdditional(definition, value)).candidato.registros[0].percepcionesAdicionales[0];
+    assert.deepEqual(group.conceptos, Array.isArray(value) ? [] : null);
+  }
+  assert.deepEqual(run(fixture()).candidato.registros[0].percepcionesAdicionales, []);
+});
+
+test('malformed or ambiguous additional structures block extraction instead of silently discarding them', () => {
+  const definition = categoriasAdicionales[0];
+  const variants = [withAdditional(definition, {}), withAdditional(definition, [null]),
+    withAdditional(definition, [{ [definition.campos.bruto]: '1', [definition.campos.bruto.toUpperCase()]: '2' }])];
+  const duplicate = withAdditional(definition, []);
+  duplicate.columnas.push(definition.columna);
+  duplicate.filas[0].push([]);
+  variants.push(duplicate);
+  for (const raw of variants) {
+    const { candidato, reporte } = run(raw);
+    assert.equal(candidato.estado, 'bloqueado');
+    assert.deepEqual(candidato.registros, []);
+    assert.ok(reporte.errores > 0);
+  }
+});
 
 test('amounts distinguish absence from zero and reject ambiguous or unsafe formats', () => {
   for (const value of ['', ' ', null, undefined, '1,000.00', '$100', '1e3', '9007199254740992']) assert.equal(parseAmount(value), null);
@@ -131,7 +210,7 @@ test('institution mode discovers all its years without registration and isolates
   await putInput(root, 'otra', '2026');
   assert.equal(await runPipeline('nueva-universidad', root, () => {}), 0);
   for (const year of ['2025', '2026']) {
-    const candidate = JSON.parse(await readFile(path.join(root, `data/processed/nueva-universidad/${year}/nomina.json`)));
+    const candidate = await readPreparedJson(path.join(root, `data/processed/nueva-universidad/${year}/nomina.json`));
     assert.equal(candidate.anio, year);
     assert.equal(candidate.identificadorInstitucion, 'nueva-universidad');
     assert.equal(candidate.institucion, 'Universidad de prueba');
@@ -139,7 +218,7 @@ test('institution mode discovers all its years without registration and isolates
   }
   await assert.rejects(readFile(path.join(root, 'data/processed/otra/2026/nomina.json')), { code: 'ENOENT' });
   assert.equal(await runPipeline(null, root, () => {}), 0);
-  assert.ok(await readFile(path.join(root, 'data/processed/otra/2026/nomina.json')));
+  assert.ok(await readFile(path.join(root, 'data/processed/otra/2026/nomina.json.gz')));
 });
 
 test('multiple files block a year, invalidate stale output and do not stop other years', async (t) => {
@@ -149,12 +228,12 @@ test('multiple files block a year, invalidate stale output and do not stop other
   await runPipeline('prueba', root, () => {});
   await writeFile(path.join(directory, 'segunda.json'), JSON.stringify(fixture()));
   assert.equal(await runPipeline(null, root, () => {}), 1);
-  const blocked = JSON.parse(await readFile(path.join(root, 'data/processed/prueba/2026/nomina.json')));
+  const blocked = await readPreparedJson(path.join(root, 'data/processed/prueba/2026/nomina.json'));
   assert.equal(blocked.estado, 'bloqueado');
   assert.deepEqual(blocked.registros, []);
   const report = JSON.parse(await readFile(path.join(root, 'data/reports/prueba/2026/revision.json')));
   assert.equal(report.conteos.archivo_unico_requerido, 1);
-  const valid = JSON.parse(await readFile(path.join(root, 'data/processed/prueba/2025/nomina.json')));
+  const valid = await readPreparedJson(path.join(root, 'data/processed/prueba/2025/nomina.json'));
   assert.equal(valid.estado, 'pendiente_revision');
 });
 
@@ -178,16 +257,16 @@ test('local execution is reproducible, preserves originals and invalidates stale
     const input = path.join(root, 'data/raw/prueba/2026/descarga.json');
     await writeFile(input, original);
     const first = await prepareYear('prueba', '2026', root);
-    const output = path.join(root, 'data/processed/prueba/2026/nomina.json');
-    const bytes = await readFile(output, 'utf8');
+    const output = path.join(root, 'data/processed/prueba/2026/nomina.json.gz');
+    const bytes = await readFile(output);
     assert.match(first.fuente.sha256, /^[a-f0-9]{64}$/);
     await prepareYear('prueba', '2026', root);
-    assert.equal(await readFile(output, 'utf8'), bytes);
+    assert.deepEqual(await readFile(output), bytes);
     assert.equal(await readFile(input, 'utf8'), original);
     await writeFile(input, '{');
     const failed = await prepareYear('prueba', '2026', root);
     assert.equal(failed.conteos.json_invalido, 1);
-    assert.deepEqual(JSON.parse(await readFile(output, 'utf8')).registros, []);
+    assert.deepEqual((await readPreparedJson(output.slice(0, -3))).registros, []);
     await rm(input);
     const missing = await prepareYear('prueba', '2026', root);
     assert.equal(missing.conteos.archivo_unico_requerido, 1);

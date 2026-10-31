@@ -21,6 +21,81 @@ export const campos = {
   nota: 'Nota',
 };
 
+// Exact PNT category/field names; categories are optional in older downloads.
+export const categoriasAdicionales = [
+  ['Percepciones adicionales en dinero', 'las percepciones adicionales en dinero'],
+  ['Percepciones adicionales en especie', 'las percepciones adicionales en especie', true],
+  ['Ingresos', 'los ingresos'],
+  ['Sistemas de compensación', 'los sistemas de compensación'],
+  ['Gratificaciones', 'las gratificaciones'],
+  ['Primas', 'las primas'],
+  ['Comisiones', 'las comisiones'],
+  ['Dietas', 'las dietas'],
+  ['Bonos', 'los bonos'],
+  ['Estímulos', 'los estímulos'],
+  ['Apoyos económicos', 'los apoyos económicos'],
+  ['Prestaciones económicas', 'las prestaciones económicas'],
+  ['Prestaciones en especie', 'las prestaciones en especie', true],
+].map(([categoria, complemento, especie = false]) => ({
+  categoria,
+  columna: especie ? `${categoria} y su periodicidad` : `${categoria}, Monto bruto y neto, tipo de moneda y su periodicidad`,
+  especie,
+  campos: {
+    idFuente: 'ID',
+    concepto: `${especie ? 'Descripción' : 'Denominación'} de ${complemento}`,
+    periodicidad: `Periodicidad de ${complemento}`,
+    ...(!especie && {
+      bruto: `Monto bruto de ${complemento}`,
+      neto: `Monto neto de ${complemento}`,
+      moneda: `Tipo de moneda de ${complemento}`,
+    }),
+  },
+}));
+
+function extractAdditional(row, categories, fila, add) {
+  return categories.map(({ definition, index, header }) => {
+    const value = row[index];
+    const origen = { columna: header };
+    if (value === null || value === '') return { categoria: definition.categoria, origen, conceptos: null };
+    if (!Array.isArray(value)) {
+      add('error', 'subtabla_invalida', fila, header);
+      return { categoria: definition.categoria, origen, conceptos: null };
+    }
+    const conceptos = value.map((item, position) => {
+      const fieldPath = `${header}[${position + 1}]`;
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        add('error', 'concepto_invalido', fila, fieldPath);
+        return null;
+      }
+      const result = { origen: { elemento: position + 1 } };
+      const entries = Object.entries(item);
+      for (const [field, expected] of Object.entries(definition.campos)) {
+        const matches = entries.filter(([name]) => key(name) === key(expected));
+        if (matches.length > 1) add('error', 'campo_adicional_ambiguo', fila, `${fieldPath}.${field}`);
+        const original = matches[0]?.[1] ?? null;
+        if (field === 'bruto' || field === 'neto') {
+          result[field] = parseAmount(original);
+          result.importesFuente ??= {};
+          result.importesFuente[field] = original;
+          if (result[field] === null && original !== null && original !== '') {
+            add('advertencia', 'importe_adicional_invalido', fila, `${fieldPath}.${field}`);
+          }
+          if (result[field] !== null && /\.\d{3,}$/.test(String(original).trim())) {
+            add('advertencia', 'importe_adicional_mas_de_dos_decimales', fila, `${fieldPath}.${field}`);
+          }
+        } else {
+          result[field] = typeof original === 'string' ? original.trim() || null : null;
+          if (original !== null && typeof original !== 'string') {
+            add('advertencia', 'texto_adicional_invalido', fila, `${fieldPath}.${field}`);
+          }
+        }
+      }
+      return result;
+    });
+    return { categoria: definition.categoria, origen, conceptos };
+  });
+}
+
 // Only these source date formats are supported; reject impossible calendar dates.
 export function parseDate(value) {
   if (typeof value !== 'string') return null;
@@ -51,7 +126,7 @@ export function prepare(raw, source, year) {
     const conteos = {};
     for (const item of incidencias) conteos[item.codigo] = (conteos[item.codigo] || 0) + 1;
     const estado = errores ? 'bloqueado' : 'pendiente_revision';
-    const metadata = { version: 2, estado, institucion: raw?.institucion ?? null, fuente: source };
+    const metadata = { version: 3, estado, institucion: raw?.institucion ?? null, fuente: source };
     const periodos = {};
     const actualizacionesFuente = {};
     for (const registro of registros) {
@@ -79,6 +154,15 @@ export function prepare(raw, source, year) {
     const matches = headers.flatMap((value, index) => value === key(header) ? [index] : []);
     if (matches.length !== 1) add('error', matches.length ? 'columna_ambigua' : 'columna_ausente', null, field);
     else indices[field] = matches[0];
+  }
+  const additionalCategories = [];
+  for (const definition of categoriasAdicionales) {
+    const matches = headers.flatMap((value, index) => value === key(definition.columna) ? [index] : []);
+    if (matches.length > 1) add('error', 'columna_ambigua', null, definition.columna);
+    else if (matches.length === 1) {
+      const index = matches[0];
+      additionalCategories.push({ definition, index, header: raw.columnas[index] });
+    }
   }
   raw.filas.forEach((row, i) => {
     if (!Array.isArray(row) || row.length !== raw.columnas.length) add('error', 'longitud_fila_invalida', i + 1);
@@ -162,13 +246,14 @@ export function prepare(raw, source, year) {
       origen: { fila }, ejercicio: text('ejercicio'), periodo, nombre,
       puesto, cargo, area, clavePuesto: text('clave'), tipoIntegrante: text('tipo'), sexo: text('sexo'),
       remuneracionMensual: { bruto, neto, monedaBruto, monedaNeto },
+      percepcionesAdicionales: extractAdditional(row, additionalCategories, fila, add),
       actualizacionFuente: date('actualizacion'), nota: text('nota'),
     };
   });
   for (const group of names.values()) if (group.length > 1) {
     for (const fila of group) add('advertencia', 'nombre_repetido', fila);
   }
-  return finish(registros);
+  return finish(incidencias.some((item) => item.nivel === 'error') ? [] : registros);
 }
 
 export function reportMarkdown(report) {
@@ -186,7 +271,7 @@ export function reportMarkdown(report) {
     '## Incidencias', '',
     '| Incidencia | Cantidad |', '| --- | ---: |',
     ...Object.entries(report.conteos).map(([code, count]) => `| ${code} | ${count} |`), '',
-    'El JSON del reporte contiene todas las incidencias y sus filas/campos. Los datos candidatos conservan registros separados, ceros, notas y monedas sin equivalencias. No incluyen ni suman las subtablas de prestaciones; se consultan en el original identificado por su hash.', '',
+    'El JSON del reporte contiene todas las incidencias y sus filas/campos. Los datos candidatos conservan registros separados, ceros, notas y monedas sin equivalencias. Las percepciones y prestaciones adicionales se conservan por categoría y concepto, sin sumarlas ni convertir su periodicidad.', '',
   ];
   return lines.join('\n');
 }

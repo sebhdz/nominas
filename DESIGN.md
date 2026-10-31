@@ -41,6 +41,10 @@ University pages provide two tabs: **Nómina** and **Pensionados**. Text search 
 
 The current teacher filter matches source position descriptions beginning with PROF. or PROFESOR. It is a browsing aid, not an official classification or exhaustive identification of teaching duties. Area and department share a control because the source has one affiliation field. Do not assume this classification covers future institutions without a human decision.
 
+## Payroll details
+
+Payroll details keep identity and monthly remuneration above accumulated visitor opinions. Additional perceptions and benefits live in a closed native details section between remuneration and opinions. Load their static data only when expanded. Use a vertical list on mobile, retaining the source concept, category, reported periodicity and available gross/net amounts without a combined total.
+
 ## Footer
 
 Use four dictionary-style definitions: nómina, fuente, bruto, and neto. Show one row on desktop and two columns on mobile, with compact mobile text and dotted dividers. Keep the independence statement outside the dictionary. Source update dates appear in individual record details, not in the footer.

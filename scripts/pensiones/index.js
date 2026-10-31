@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { preparePensions } from './prepare.js';
+import { writePreparedJson } from '../../src/lib/prepared-json.js';
 
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 const pensionRoot = path.join(projectRoot, 'data/pensions');
@@ -23,7 +24,7 @@ export async function preparePensionFile(filename, root = projectRoot) {
   });
   const outputDirectory = path.join(root, 'data/pensions/processed', id);
   await mkdir(outputDirectory, { recursive: true });
-  await writeFile(path.join(outputDirectory, 'pensiones.json'), `${JSON.stringify(candidate, null, 2)}\n`);
+  await writePreparedJson(path.join(outputDirectory, 'pensiones.json'), candidate);
   return candidate;
 }
 

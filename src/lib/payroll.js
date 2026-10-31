@@ -1,12 +1,13 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { readPreparedJson } from './prepared-json.js';
 
 // Astro bundles this module before prerendering, so import.meta.url no longer
 // points to src/lib. Builds run from the project root, as documented.
 const processedRoot = path.resolve('data/processed');
 
 export async function readPayroll(file) {
-  const data = JSON.parse(await readFile(file, 'utf8'));
+  const data = await readPreparedJson(file);
   if (data.estado === 'bloqueado' || !data.institucion?.trim() || !Array.isArray(data.registros) || !data.registros.length) {
     throw new Error(`Invalid or blocked prepared payroll: ${file}`);
   }
@@ -41,7 +42,39 @@ export async function discoverUniversities(root = processedRoot) {
   return universities.sort((a, b) => a.name.localeCompare(b.name, 'es'));
 }
 
+const BENEFIT_BLOCK_SIZE = 100;
+const recordId = (data, record) => `${data.fuente.sha256.slice(0, 16)}-${record.origen.fila}`;
+
+export function toBenefitBlocks(data) {
+  const blocks = new Map();
+  data.registros.forEach((record, index) => {
+    const concepts = (record.percepcionesAdicionales ?? []).flatMap(group =>
+      (group.conceptos ?? []).filter(concept =>
+        [concept.bruto, concept.neto].some(amount => Number.isFinite(amount) && amount !== 0)
+      ).map(concept => ({
+        categoria: group.categoria,
+        concepto: concept.concepto,
+        bruto: concept.bruto ?? null,
+        neto: concept.neto ?? null,
+        periodicidad: concept.periodicidad,
+      }))
+    );
+    if (!concepts.length) return;
+    const block = `${data.fuente.sha256.slice(0, 16)}-${Math.floor(index / BENEFIT_BLOCK_SIZE)}`;
+    if (!blocks.has(block)) blocks.set(block, {
+      block,
+      url: `/data/${data.identificadorInstitucion}/${data.anio}/prestaciones/${block}.json`,
+      records: {},
+    });
+    blocks.get(block).records[recordId(data, record)] = concepts;
+  });
+  return [...blocks.values()];
+}
+
 export function toSearchPeople(data) {
+  const benefitUrls = new Map(toBenefitBlocks(data).flatMap(block =>
+    Object.keys(block.records).map(id => [id, block.url])
+  ));
   return data.registros.map((record) => {
     const nombres = record.nombre.nombres || '';
     const apellidos = [record.nombre.primerApellido, record.nombre.segundoApellido].filter(Boolean).join(' ');
@@ -52,7 +85,8 @@ export function toSearchPeople(data) {
     return {
       // This identifies a source row, not a person across periods. Changing the
       // input invalidates old row links rather than pointing to another person.
-      id: `${data.fuente.sha256.slice(0, 16)}-${record.origen.fila}`,
+      id: recordId(data, record),
+      ...(benefitUrls.has(recordId(data, record)) && { prestacionesUrl: benefitUrls.get(recordId(data, record)) }),
       nombre: includesSurnames ? nombres : [nombres, apellidos].filter(Boolean).join(' '),
       nombres: includesSurnames ? givenWords.slice(0, -surnameWords.length).join(' ') : nombres,
       apellidos,
@@ -64,6 +98,10 @@ export function toSearchPeople(data) {
       actualizacion: record.actualizacionFuente,
     };
   });
+}
+
+export async function getBenefitBlocks(id, year) {
+  return toBenefitBlocks(await readPayroll(path.join(processedRoot, id, year, 'nomina.json')));
 }
 
 export async function getSearchDataset(id, year) {

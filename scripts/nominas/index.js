@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { prepare, reportMarkdown } from './prepare.js';
+import { writePreparedJson } from '../../src/lib/prepared-json.js';
 
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 const validInstitution = (id) => /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(id);
@@ -42,8 +43,8 @@ export async function prepareYear(id, year, root = projectRoot) {
   await mkdir(processed, { recursive: true });
   await mkdir(reports, { recursive: true });
   // A failed run replaces any previous candidate with an empty blocked result.
-  await writeFile(path.join(processed, 'nomina.json'), JSON.stringify(result.candidato, null, 2) + '\n');
-  await writeFile(path.join(reports, 'revision.json'), JSON.stringify(result.reporte, null, 2) + '\n');
+  await writePreparedJson(path.join(processed, 'nomina.json'), result.candidato);
+  await writeFile(path.join(reports, 'revision.json'), JSON.stringify(result.reporte) + '\n');
   await writeFile(path.join(reports, 'revision.md'), reportMarkdown(result.reporte));
   return result.reporte;
 }

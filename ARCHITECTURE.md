@@ -13,6 +13,8 @@ Browser:             catalog → selected dataset → shared search/area + datas
 
 Preparation runs only when invoked manually. The build reads prepared files already in the repository; it does not need raw downloads. Payroll browser requests retrieve static files, not a runtime API or filesystem listing. The separate [opinion service](aws/README.md) uses AWS and Turnstile; it is not part of payroll loading or preparation. Only each institution's latest prepared year is emitted. Older years may remain in Git but are not accessible as historical pages or search files.
 
+Prepared payroll and pension artifacts use `nomina.json.gz` and `pensiones.json.gz`. The shared Node-only `src/lib/prepared-json.js` reads and writes compact JSON using built-in gzip support. Writers replace uncompressed artifacts after successfully writing the gzip. Readers accept legacy `.json` if `.json.gz` is missing; corrupt gzip never falls back to an older JSON. No decompression code or prepared artifacts are shipped to the browser. Public URLs and HTTP compression remain independent of this storage format.
+
 ## Responsibilities
 
 | Location | Responsibility |
@@ -26,6 +28,7 @@ Preparation runs only when invoked manually. The build reads prepared files alre
 | [src/pages/nomina.astro](src/pages/nomina.astro) | One shared payroll document, controls, table, and person dialog. |
 | [src/scripts/search.js](src/scripts/search.js) | Load the selected dataset, bind controls, render results, paginate, manage the dialog, and preserve URL state. It expects the payroll page's DOM; do not load it on unrelated pages. |
 | [src/scripts/search-utils.js](src/scripts/search-utils.js) | Pure normalization, record filtering, and sorting. It does not manage DOM, network requests, URL state, or browser history. |
+| [src/scripts/benefits.js](src/scripts/benefits.js) | Load static benefit blocks on expansion, reuse downloads in memory, and render the current record's reported concepts. |
 | [Page.astro](src/layouts/Page.astro) | Shared document/head, marquee, skip link, and footer. |
 | [Footer.astro](src/components/Footer.astro) | Footer markup and local styles. |
 | [src/styles/global.css](src/styles/global.css) | Theme variables and shared/payroll styles. Directory-specific styles stay in its component. |
@@ -57,7 +60,7 @@ The directory is rendered from payroll discovery. The payroll controller fetches
 
 Keep original downloads local and unchanged. Commit the reviewed prepared files, not raw exports; `.gitignore` retains only `data/pensions/raw/.gitkeep` to mark the input directory. A fresh checkout builds from prepared files without the originals. Removing raw files from Git tracking does not erase them from previous commits.
 
-PNT source files are stored locally in `data/pensions/raw/<ID>-pensiones.json` and excluded from Git; `scripts/pensiones/` writes prepared files to `data/pensions/processed/<id>/pensiones.json`. The build discovers prepared files and emits `{ records }`: a reduced array of person-level rows. Source notes are preserved in prepared data for traceability, but omitted from browser files and the interface. Files containing only anonymous/explanatory rows do not create a static search route or enable the Pensionados tab. Source rows without a person name remain in prepared data but are not represented as people in the search file. Each browser record contains a source-hash/row ID, full name, separate given names (`nombres`) and surnames (`apellidos`) for two-line display, area, pension type/status, reported amount, source periodicity, reporting period, and source update date. Amounts are not converted across periodicities or inferred as gross/net unless the source explicitly establishes that distinction. The page shares text search and area filtering between tabs; pension type/status filters and reported-amount ordering apply only to Pensionados, while professor-group filters and gross-pay ordering apply only to Nómina.
+PNT source files are stored locally in `data/pensions/raw/<ID>-pensiones.json` and excluded from Git; `scripts/pensiones/` writes prepared files to `data/pensions/processed/<id>/pensiones.json.gz`. The build discovers prepared files and emits `{ records }`: a reduced array of person-level rows. Source notes are preserved in prepared data for traceability, but omitted from browser files and the interface. Files containing only anonymous/explanatory rows do not create a static search route or enable the Pensionados tab. Source rows without a person name remain in prepared data but are not represented as people in the search file. Each browser record contains a source-hash/row ID, full name, separate given names (`nombres`) and surnames (`apellidos`) for two-line display, area, pension type/status, reported amount, source periodicity, reporting period, and source update date. Amounts are not converted across periodicities or inferred as gross/net unless the source explicitly establishes that distinction. The page shares text search and area filtering between tabs; pension type/status filters and reported-amount ordering apply only to Pensionados, while professor-group filters and gross-pay ordering apply only to Nómina.
 
 ### Search file: `/data/<id>/<year>.json`
 
@@ -73,8 +76,19 @@ An array of browser records:
 | `area` | String or null; source affiliation. |
 | `bruto`, `neto` | Numbers or null; prepared monthly remuneration values, without recalculation. |
 | `actualizacion` | ISO source update date or null, per record. |
+| `prestacionesUrl` | Optional static detail-block URL; absent if no additional concept has a finite nonzero gross or net amount. |
 
 The browser formats names/labels for readability, amounts in MXN, and missing amounts as “Sin dato”. Null gross amounts sort after numeric amounts in either direction. The search file omits original notes and benefit subtables; do not infer their content from the reduced projection.
+
+### Benefit blocks: `/data/<id>/<year>/prestaciones/<hash>-<block>.json`
+
+Astro generates these compact JSON assets solely from prepared payrolls. `toBenefitBlocks` groups records by their zero-based source-array position in blocks of 100, omitting blocks without eligible concepts. The block name contains the first 16 characters of the source SHA-256 and the block index, so replacing the source changes detail URLs. `toSearchPeople` uses that same projection to assign `prestacionesUrl`; clients must follow that link rather than derive it from names or pagination.
+
+Each block is an object keyed by the same record ID used in search. Its values are arrays of `{ categoria, concepto, bruto, neto, periodicidad }`. Only concepts with at least one finite, nonzero gross or net amount enter the public detail projection. A zero or missing counterpart remains zero or null. Negative amounts and additional decimals are preserved. Descriptions without monetary amounts stay in prepared data. Categories and periodicities retain the source wording; no concepts are summed or converted to monthly equivalents.
+
+The native details section starts closed and loads nothing until expanded. Downloads are cached as promises in page memory, shared by profiles using the same block; failed downloads are evicted for retry. A profile-generation check prevents late replies from rendering in another profile or a closed dialog. Failure affects only the detail section. Older prepared records without `percepcionesAdicionales` produce no detail link. Opinion keys, API calls, and AWS storage are unchanged; the heading explicitly identifies accumulated visitor opinions.
+
+All generated JSON is written without indentation. This reduces local/static file size and does not implement HTTP compression; transfer compression belongs to hosting. The local raw files never participate in this build flow.
 
 ## Current search and URL behavior
 

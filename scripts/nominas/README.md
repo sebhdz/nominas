@@ -8,7 +8,7 @@ Read [project guidance](../../AGENTS.md) for data fidelity, MXN policy, and huma
 
 The selected source is the [Plataforma Nacional de Transparencia](https://consultapublicamx.plataformadetransparencia.org.mx), using its selected payroll JSON structure. This tool is not a generic importer for arbitrary JSON, CSV, spreadsheets, or other platforms. A new university must supply data conforming to this contract; adding a university does not mean adding support for a new format. Incompatible input is not incorporated. Do not solve rejection by weakening checks, guessing column matches, or broadening the pipeline's scope.
 
-The original JSON must contain a nonempty `institucion` string, `columnas` as an array of header strings, and `filas` as an array of row arrays aligned with those headers. Every row must have the declared number of columns. Required payroll headers are maintained once in [`campos` in prepare.js](prepare.js); the validator matches them by normalized text, not position. Additional columns are allowed. The contract does not require a fixed total number of columns, and nested benefit tables are not remuneration inputs for this extraction.
+The original JSON must contain a nonempty `institucion` string, `columnas` as an array of header strings, and `filas` as an array of row arrays aligned with those headers. Every row must have the declared number of columns. Required payroll headers are maintained once in [`campos` in prepare.js](prepare.js); the validator matches them by normalized text, not position. Additional columns are allowed. The contract does not require a fixed total number of columns. The 13 selected PNT benefit and additional-income categories are defined in `categoriasAdicionales` in that same file; their extraction is described below.
 
 The maintainer chooses the institution, exercise year, and single reporting interval before preparation. If the export does not conform, obtain an input that does. Changing accepted sources or introducing another format is outside the documented onboarding workflow and requires a separate human decision. Never edit the prepared output to disguise an incompatible original.
 
@@ -33,12 +33,12 @@ Paths are relative to the repository root; angle-bracket names are placeholders.
 ```text
 data/raw/<institution>/<year>/<download>.json
 
-data/processed/<institution>/<year>/nomina.json
+data/processed/<institution>/<year>/nomina.json.gz
 data/reports/<institution>/<year>/revision.json
 data/reports/<institution>/<year>/revision.md
 ```
 
-Prepared JSON files in `data/processed/` are versioned in Git alongside code, documentation, and synthetic tests. The script writes them directly; no manual copy or separate promotion command is needed. Original downloads and preparation reports stay local and are ignored by Git. `.gitkeep` preserves the input root. See [deployment decisions](../../DEPLOYMENT.md) for how prepared data will reach the website. Ignoring paths does not remove files already tracked by Git.
+Prepared gzip-compressed JSON files in `data/processed/` are versioned in Git alongside code, documentation, and synthetic tests. The script writes them directly; no manual copy or separate promotion command is needed. Original downloads and preparation reports stay local and are ignored by Git. `.gitkeep` preserves the input root. See [deployment decisions](../../DEPLOYMENT.md) for how prepared data will reach the website. Ignoring paths does not remove files already tracked by Git.
 
 ## Identity and reporting period
 
@@ -101,9 +101,32 @@ A candidate contains `version`, `estado`, `identificadorInstitucion`, `anio`, `i
 | `nombre` | Given names and first/second surnames as separate source components. |
 | `puesto`, `cargo`, `area`, `clavePuesto`, `tipoIntegrante`, `sexo` | Source descriptions without new classifications. |
 | `remuneracionMensual` | Gross and net amounts and original currency fields. |
+| `percepcionesAdicionales` | Additional concepts grouped under their original PNT categories; never added to monthly remuneration. |
 | `nota` | Original institutional note. |
 
-Monthly periodicity comes from the amount headers, not the length of the reporting interval. Benefit and additional-income subtables are neither extracted nor added to remuneration; they remain accessible through original file/hash/row references.
+Monthly periodicity comes from the amount headers, not the length of the reporting interval. Additional concepts retain their own reported periodicity; preparation never sums them, converts periods, or determines whether they are already included in the monthly amounts.
+
+### Additional perceptions and benefits
+
+New candidates use version 3. Existing version 2 files remain usable by the website; regeneration is an explicit local operation, not a build step. Prepared JSON is compact and gzip-compressed using Node's built-in tools. The pipeline writes `nomina.json.gz` and removes the old uncompressed `nomina.json` only after writing successfully. Reports remain local, with compact JSON and readable Markdown. Compression changes storage, not field contents or approval status.
+
+The build decompresses prepared data with Node and emits ordinary static search JSON and benefit blocks. Raw inputs remain untouched JSON downloads and are not required by the build. Hosting's HTTP compression is independent of this repository format. During migration the reader also accepts legacy `nomina.json`; if both exist, gzip takes precedence, and a corrupt gzip fails rather than falling back to stale data. Do not keep two competing versions.
+
+To inspect a compressed candidate in a terminal without modifying it:
+
+```sh
+gzip -dc data/processed/<institution>/<year>/nomina.json.gz
+```
+
+The review workflow above remains the same: compare against the original and consult reports before human production approval.
+
+`percepcionesAdicionales` is an array of groups with `categoria`, `origen.columna` (the original header), and `conceptos`. Categories are matched by normalized complete headers, regardless of position. Missing category columns produce no group; a present blank/null cell produces `conceptos: null`, while an empty array remains `[]`. Duplicate category headers, malformed subtables, non-object concepts, or ambiguous normalized concept keys block the candidate. Unrelated additional columns remain outside extraction.
+
+Each concept retains its one-based `origen.elemento` within the source subtable, `idFuente`, `concepto`, and literal `periodicidad`. Monetary categories also carry `bruto`, `neto`, `moneda`, and `importesFuente` containing the original gross/net cells. Amount parsing follows the same rules as monthly pay; unsupported values become null and produce review findings. Do not interpret a subtable ID as a unique person identifier. The file hash, record's source row, category header, and element position locate the source concept.
+
+In-kind categories have description/periodicity but no monetary fields. Zeros, negatives, missing values, repeated concepts, and explanatory labels are retained without classifying them as benefits received. A periodicity can be a contractual reference or explanation rather than a frequency. No categories are excluded based on their frequency at a particular university.
+
+The detail view shows only concepts with at least one valid, nonzero gross or net amount; descriptions without amounts stay in prepared data. This is a presentation rule, not an extraction filter. See the [static benefit-block contract](../../ARCHITECTURE.md#benefit-blocks-dataidyearprestacioneshash-blockjson) for build generation and on-demand loading. The AWS backend is unchanged.
 
 A blocked year produces an empty candidate with `estado: bloqueado` and an error report, replacing any prior output for that target so it cannot appear current. Other valid years and institutions continue processing. Invalid institution/year directory names are reported in the terminal, without creating outputs for invalid paths. A missing input root, unknown requested institution, or empty selection fails explicitly.
 
@@ -127,6 +150,9 @@ Reports count records and findings, not unique people. A row can have multiple f
 | `nombre_repetido` | Name components match after comparison normalization; records remain separate. |
 | `importe_cero`, `importe_negativo`, `neto_mayor_que_bruto`, `importe_mas_de_dos_decimales` | Reported values are retained without correction. |
 | `moneda_por_revisar` | Original label is missing or unrecognized by the detector; does not block preparation or change MXN policy. |
+| `subtabla_invalida`, `concepto_invalido`, `campo_adicional_ambiguo` | Malformed additional subtable, concept, or duplicate normalized concept field; blocks the candidate. |
+| `importe_adicional_invalido`, `texto_adicional_invalido` | Unsupported additional amount or text; normalized as null, with source location retained. |
+| `importe_adicional_mas_de_dos_decimales` | Additional amount retains its extra decimals without rounding. |
 
 Check counts, dates, periods, and extracted fields against the original. Findings do not authorize changing reported remuneration or adding interface explanations. Consult [project guidance](../../AGENTS.md) when unsure; investigate the original first. Keep institution-specific observations in reports rather than turning them into global conventions.
 

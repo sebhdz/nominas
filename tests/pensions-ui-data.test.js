@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { discoverPensionDatasets, toSearchPensions } from '../src/lib/pensions.js';
 import { discoverUniversities } from '../src/lib/payroll.js';
+import { writePreparedJson } from '../src/lib/prepared-json.js';
 
 const pensionData = (overrides = {}) => ({
   version: 1,
@@ -49,7 +50,7 @@ test('pension discovery emits only available datasets from matching directories'
   t.after(() => rm(root, { recursive: true, force: true }));
   const directory = path.join(root, 'prueba');
   await mkdir(directory, { recursive: true });
-  await writeFile(path.join(directory, 'pensiones.json'), JSON.stringify(pensionData()));
+  await writePreparedJson(path.join(directory, 'pensiones.json'), pensionData());
   const discovered = await discoverPensionDatasets(root);
   assert.deepEqual(discovered.map(({ id, url, records }) => [id, url, records.length]), [
     ['prueba', '/data/pensions/prueba.json', 1],

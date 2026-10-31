@@ -1,5 +1,6 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { readPreparedJson } from './prepared-json.js';
 
 const processedRoot = path.resolve('data/pensions/processed');
 
@@ -27,7 +28,7 @@ export function toSearchPensions(data) {
 }
 
 export async function readPensions(file) {
-  const data = JSON.parse(await readFile(file, 'utf8'));
+  const data = await readPreparedJson(file);
   if (!data.institucion?.trim() || !data.identificadorInstitucion || !data.fuente?.sha256 || !Array.isArray(data.registros)) {
     throw new Error(`Invalid prepared pensions: ${file}`);
   }

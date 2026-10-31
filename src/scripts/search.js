@@ -1,4 +1,5 @@
 import { findPeople, findPensioners, normalize } from './search-utils.js';
+import { setupBenefits } from './benefits.js';
 import { loadPerception, resetPerception, setupPerceptionListeners, startBackgroundVerification, fetchBatchOpinions } from './votes.js';
 import { getProfessorKey } from '../lib/professor-key.js';
 
@@ -8,6 +9,10 @@ const results = $('#results');
 const pensionResults = $('#pension-results');
 const status = $('#status');
 const dialog = $('#person-dialog');
+const benefits = setupBenefits({
+  details: $('#person-benefits'), list: $('#benefits-list'),
+  status: $('#benefits-status'), retry: $('#benefits-retry'),
+});
 const area = $('#area');
 const areaInput = $('#area-input');
 const areaList = $('#area-list');
@@ -345,6 +350,7 @@ function runSearch({ updateURL = true } = {}) {
 }
 
 function openPerson(person, trigger = search, updateURL = true) {
+  benefits.show(person);
   selected = person;
   lastTrigger = trigger;
   $('#person-name').textContent = readableName(person.nombre);
@@ -367,6 +373,7 @@ function openPerson(person, trigger = search, updateURL = true) {
 dialog.addEventListener('close', () => {
   if (dialog.open) return;
   resetPerception();
+  benefits.show(null);
   selected = null;
   const url = new URL(location.href);
   url.searchParams.delete('persona');

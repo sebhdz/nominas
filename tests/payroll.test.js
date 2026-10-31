@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { discoverUniversities, getSearchDataset, toSearchPeople } from '../src/lib/payroll.js';
+import { discoverUniversities, toSearchPeople, toBenefitBlocks } from '../src/lib/payroll.js';
+import { writePreparedJson } from '../src/lib/prepared-json.js';
 
 function dataset(overrides = {}) {
   return {
@@ -22,7 +23,7 @@ test('discovers institutions without a registry and publishes only their latest 
   for (const year of ['2025', '2026']) {
     const directory = path.join(root, 'prueba', year);
     await mkdir(directory, { recursive: true });
-    await writeFile(path.join(directory, 'nomina.json'), JSON.stringify(dataset({ anio: year })));
+    await writePreparedJson(path.join(directory, 'nomina.json'), dataset({ anio: year }));
   }
   const catalog = await discoverUniversities(root);
   assert.equal(catalog.length, 1);
@@ -31,7 +32,7 @@ test('discovers institutions without a registry and publishes only their latest 
   assert.equal(catalog[0].name, 'Universidad de prueba');
   assert.equal(catalog[0].url, '/data/prueba/2026.json');
   assert.deepEqual(catalog[0].updates, ['2026-07-02']);
-  await writeFile(path.join(root, 'prueba/2026/nomina.json'), JSON.stringify(dataset({ estado: 'bloqueado' })));
+  await writePreparedJson(path.join(root, 'prueba/2026/nomina.json'), dataset({ estado: 'bloqueado' }));
   await assert.rejects(discoverUniversities(root), /blocked/);
 });
 
@@ -69,18 +70,37 @@ test('display does not append surnames already present at the end of the given-n
   assert.equal(raw.registros[0].nombre.nombres, 'ANA PEREZ');
 });
 
-test('discovers prepared uag dataset with valid metadata and search projection', async () => {
-  const catalog = await discoverUniversities();
-  const uag = catalog.find((item) => item.id === 'uag');
-  assert.ok(uag, 'uag must be present in discovered catalog');
-  assert.equal(uag.name, 'Universidad de Guanajuato');
-  assert.equal(uag.year, '2026');
-  assert.equal(uag.url, '/data/uag/2026.json');
-  assert.equal(uag.records, 1991);
-  assert.deepEqual(uag.period, { inicio: '2026-04-01', fin: '2026-06-30' });
+test('older prepared records without additional concepts have no detail URL or blocks', () => {
+  const data = dataset({ version: 2 });
+  assert.deepEqual(toBenefitBlocks(data), []);
+  assert.equal('prestacionesUrl' in toSearchPeople(data)[0], false);
+});
 
-  const people = await getSearchDataset('uag', '2026');
-  assert.equal(people.length, 1991);
-  assert.ok(people.every((p) => typeof p.id === 'string' && p.id.startsWith('8b11f7781ca1228b-')));
-  assert.ok(people.every((p) => p.nombre && typeof p.bruto === 'number'));
+test('benefit blocks and search links agree across boundaries and omit nonmonetary or zero concepts', () => {
+  const data = dataset();
+  const base = data.registros[0];
+  data.registros = Array.from({ length: 201 }, (_, i) => ({ ...base, origen: { fila: i + 1 },
+    percepcionesAdicionales: [{ categoria: 'Primas', conceptos: [
+      { concepto: 'Cero', bruto: 0, neto: null },
+      { concepto: 'Sin importe', bruto: null, neto: null },
+      { concepto: 'Prima', bruto: 123.4567, neto: null, periodicidad: 'CCT 73' },
+      { concepto: 'Ajuste', bruto: null, neto: -10, periodicidad: 'ANUAL' },
+    ] }, { categoria: 'En especie', conceptos: [{ concepto: 'Vales' }] }],
+  }));
+  const before = structuredClone(data);
+  const blocks = toBenefitBlocks(data);
+  assert.deepEqual(blocks.map(b => Object.keys(b.records).length), [100, 100, 1]);
+  const people = toSearchPeople(data);
+  for (const index of [0, 99, 100, 200]) {
+    const block = blocks.find(b => b.url === people[index].prestacionesUrl);
+    assert.ok(block);
+    assert.equal(block.records[people[index].id].length, 2);
+    assert.equal(block.records[people[index].id][0].bruto, 123.4567);
+    assert.equal(block.records[people[index].id][0].periodicidad, 'CCT 73');
+    assert.equal(block.records[people[index].id][1].neto, -10);
+    assert.equal(people[index].bruto, 0);
+    assert.equal('percepcionesAdicionales' in people[index], false);
+  }
+  assert.deepEqual(data, before);
+  assert.notEqual(toBenefitBlocks({ ...data, fuente: { sha256: 'another-source' } })[0].url, blocks[0].url);
 });

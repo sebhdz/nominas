@@ -5,13 +5,13 @@ This document owns hosting, data distribution, performance, and audience measure
 ## Agreed approach
 
 - Host the static Astro build on Cloudflare Pages, using the maintainer's existing Cloudflare domain. No runtime backend is required.
-- Store prepared data in `data/processed/` in the repository. The pipeline writes it directly so contributors do not need a manual transfer step. This keeps contributions and builds straightforward without adding a bucket or release-download workflow. Original downloads and preparation reports remain local; prepared records are not published automatically.
+- Store gzip-compressed prepared JSON in `data/processed/` in the repository. The pipeline writes it directly so contributors do not need a manual transfer step. Node decompresses it during build; no bucket, release-download workflow, or browser decompression library is required. Original downloads and preparation reports remain local; prepared records are not published automatically.
 - Generate a separate static search dataset for each university's latest prepared year. A visitor loads only the selected university's data, with only the fields needed by the interface. Keep full preparation artifacts out of browser downloads. Routes and contracts belong in [ARCHITECTURE.md](ARCHITECTURE.md).
-- Use Cloudflare's HTTP response compression, with supported algorithms negotiated by the browser. Do not add application-level decompression libraries or require contributors to maintain compressed source copies.
+- Use Cloudflare's HTTP response compression, with supported algorithms negotiated by the browser. This is separate from gzip storage of prepared artifacts; original source downloads stay uncompressed and local.
 - Use Pages' default asset caching and browser revalidation before introducing custom cache rules. Data updates must become visible without serving outdated data indefinitely; verify this after deployment.
 - Use Cloudflare Web Analytics for visits, page views, and real-user performance measurements. Its browser script adds an external request; do not add other analytics tools without a human decision. Audience metrics are estimates, not exact counts of unique people.
 
-Compression reduces transfer size, not the original files stored in Git or the amount of decoded JSON the browser must process. Keep the repository representation readable and reviewable. Additional performance machinery should follow measured needs rather than hypothetical scale.
+HTTP compression reduces transfer size, not the amount of decoded JSON the browser processes. Prepared-artifact gzip reduces storage in Git; review it through local decompression, reports, and source comparison as described in the pipeline guide. Public benefit blocks load only when expanded. Additional performance machinery should follow measured needs rather than hypothetical scale.
 
 ## Implementation status
 
