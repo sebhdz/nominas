@@ -1,5 +1,5 @@
 import { findPeople, findPensioners, normalize } from './search-utils.js';
-import { loadPerception, resetPerception, setupPerceptionListeners } from './votes.js';
+import { loadPerception, resetPerception, setupPerceptionListeners, startBackgroundVerification } from './votes.js';
 
 const $ = selector => document.querySelector(selector);
 const search = $('#search');
@@ -542,3 +542,4 @@ async function loadData() {
 restoreLocation();
 loadData();
 setupPerceptionListeners();
+startBackgroundVerification();

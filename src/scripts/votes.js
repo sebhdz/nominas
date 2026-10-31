@@ -20,6 +20,30 @@ let generation = 0;
 let verificationMessage = '';
 let verificationBusy = false;
 let loadingOpinions = false;
+let backgroundChallenge = false;
+
+export function startBackgroundVerification() {
+  if (challenge) return;
+  startVerification(getEl('background-turnstile'), true);
+}
+
+function startVerification(container, background = false) {
+  backgroundChallenge = background;
+  challenge = createTurnstile(container, (passed, message, retryAllowed, busy) => {
+    if (backgroundChallenge && !passed && currentProfKey) {
+      challenge.destroy();
+      startVerification(getEl('vote-turnstile'));
+      return;
+    }
+    verified = passed;
+    verificationMessage = message;
+    verificationBusy = busy;
+    const retry = getEl('retry-verification');
+    if (retry) retry.hidden = !retryAllowed;
+    updateVoteButtons();
+  });
+  challenge.start();
+}
 
 function updateVoteButtons() {
   for (const id of ['vote-recommend-yes', 'vote-recommend-no', 'vote-more', 'vote-fair', 'vote-less']) {
@@ -140,17 +164,13 @@ export async function loadPerception(universityId, fullName) {
   abortController = new AbortController();
   loadingOpinions = true;
   updateVoteButtons();
-  if (!challenge) {
-    challenge = createTurnstile(getEl('vote-turnstile'), (passed, message, retryAllowed, busy) => {
-      verified = passed;
-      verificationMessage = message;
-      verificationBusy = busy;
-      const retry = getEl('retry-verification');
-      if (retry) retry.hidden = !retryAllowed;
-      updateVoteButtons();
-    });
-    challenge.start();
+  // A pending interactive widget outside a modal would be inaccessible.
+  // Keep successful background checks; otherwise continue inside the profile.
+  if (backgroundChallenge && !verified) {
+    challenge.destroy();
+    challenge = null;
   }
+  if (!challenge) startVerification(getEl('vote-turnstile'));
 
   currentProfKey = getProfessorKey(universityId, fullName);
   const salaryMap = getLocalMap(STORAGE_SALARY_KEY);

@@ -14,6 +14,7 @@ import RecordsTable from "../components/RecordsTable.astro";
       <p class="legal-reference"><a href="/metodologia/">El artículo 6° constitucional</a> protege el derecho a acceder y difundir información pública. Aquí sólo hacemos más visible lo que las instituciones ya publicaron.</p>
     </section>
     <p id="university-error" role="status" hidden></p>
+    <div id="background-turnstile" data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || ''} aria-label="Verificación para participar en opiniones"></div>
     <nav class="dataset-tabs" role="tablist" aria-label="Información de la universidad">
       <button id="payroll-tab" class="dataset-tab" type="button" role="tab" aria-selected="true" aria-controls="payroll-panel">Nómina</button>
       <button id="pensions-tab" class="dataset-tab" type="button" role="tab" aria-selected="false" aria-controls="pensions-panel" tabindex="-1" disabled hidden>Pensionados</button>

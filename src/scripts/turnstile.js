@@ -1,4 +1,4 @@
-// Loaded only when a person opens the opinion form, not while browsing payrolls.
+// Shared by the early page check and the opinion form.
 let scriptPromise;
 function loadScript() {
   if (window.turnstile) return Promise.resolve(window.turnstile);

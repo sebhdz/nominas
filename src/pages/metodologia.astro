@@ -14,13 +14,12 @@ import Page from '../layouts/Page.astro';
     <section class="methodology-section legal-section" aria-labelledby="marco-title">
       <p class="section-number" aria-hidden="true">01</p>
       <div>
-        <p class="section-label">El marco público</p>
         <h2 id="marco-title">El derecho a saber existe antes que este sitio.</h2>
         <h3 class="legal-principle">Ningún reglamento estudiantil está por encima de la Constitución.</h3>
         <p>Esta consulta no crea la obligación de transparencia: ayuda a leer información que debe estar disponible públicamente.</p>
         <div class="legal-links">
           <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf" target="_blank" rel="noopener noreferrer"><strong>Constitución, artículo 6.</strong><span>Reconoce el derecho a buscar, recibir y difundir información; establece el principio de máxima publicidad.</span></a>
-          <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGTAIP.pdf" target="_blank" rel="noopener noreferrer"><strong>Ley General de Transparencia, artículo 65, fracción VII.</strong><span>Establece obligaciones de transparencia para que la información de las instituciones públicas esté disponible para cualquier persona.</span></a>
+          <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGTAIP.pdf" target="_blank" rel="noopener noreferrer"><strong>Ley General de Transparencia, artículos 1 y 2.</strong><span>Establece las bases para garantizar el acceso a la información pública y promueve su difusión en formas comprensibles y accesibles.</span></a>
         </div>
       </div>
     </section>
@@ -28,21 +27,23 @@ import Page from '../layouts/Page.astro';
     <section class="methodology-section source-section" aria-labelledby="origen-title">
       <p class="section-number" aria-hidden="true">02</p>
       <div>
-        <p class="section-label">El origen</p>
         <h2 id="origen-title">La fuente es pública.</h2>
         <p>Los datos provienen de archivos publicados en la <a href="https://consultapublicamx.plataformadetransparencia.org.mx" target="_blank" rel="noopener noreferrer">Plataforma Nacional de Transparencia</a>. Cada universidad reporta su propia información, sus periodos y sus fechas de actualización.</p>
         <p>Por eso, cada nómina del sitio identifica la institución y el periodo informado. La fuente oficial sigue siendo el registro de origen.</p>
+        <p>Mostramos un periodo seleccionado por institución y año; la consulta utiliza el año más reciente disponible en el sitio.</p>
       </div>
     </section>
 
     <section class="methodology-section" aria-labelledby="proceso-title">
       <p class="section-number" aria-hidden="true">03</p>
       <div>
-        <p class="section-label">El proceso</p>
         <h2 id="proceso-title">Del archivo público a una consulta legible.</h2>
         <ol class="process-list">
           <li><strong>Descarga.</strong> Partimos de los archivos públicos disponibles en la Plataforma Nacional de Transparencia.</li>
-          <li><strong>Revisión y preparación.</strong> Las descargas originales no se publican ni se conservan en el repositorio. Un <a href="https://github.com/sebhdz/nominas/tree/main/scripts/nominas" target="_blank" rel="noopener noreferrer">script automatizado y público</a> valida y estandariza sus campos para consulta, sin recalcular ni corregir valores. Registra el hash SHA-256 del archivo usado —una huella que permite detectar cambios— y una persona revisa el resultado antes de aprobar su publicación.</li>
+          <li><strong>Revisión y preparación.</strong>
+            <p>Las descargas originales no se publican ni se conservan en el repositorio. Un <a href="https://github.com/sebhdz/nominas/tree/main/scripts/nominas" target="_blank" rel="noopener noreferrer">script automatizado y público</a> valida y estandariza sus campos para consulta, sin recalcular ni corregir valores.</p>
+            <p>Registramos una huella SHA-256 que identifica el archivo utilizado y permite comprobar si una copia coincide con él. Una persona revisa el resultado antes de aprobar su publicación.</p>
+          </li>
           <li><strong>Consulta.</strong> El resultado se publica como un sitio estático: buscar una nómina no consulta sistemas internos de una universidad.</li>
         </ol>
       </div>
@@ -50,7 +51,6 @@ import Page from '../layouts/Page.astro';
 
     <section class="reading-grid" aria-label="Qué muestra y qué no hace el sitio">
       <article>
-        <p class="section-label">Qué mostramos</p>
         <h2>Lo que la fuente reporta.</h2>
         <ul class="plain-list">
           <li>Nombre, puesto y área o departamento publicados.</li>
@@ -59,7 +59,6 @@ import Page from '../layouts/Page.astro';
         </ul>
       </article>
       <article>
-        <p class="section-label">Qué no hacemos</p>
         <h2>Lo que el sitio no afirma.</h2>
         <ul class="plain-list">
           <li>No recalculamos ni corregimos remuneraciones reportadas.</li>
@@ -72,10 +71,9 @@ import Page from '../layouts/Page.astro';
     <section class="methodology-section limits-section" aria-labelledby="limites-title">
       <p class="section-number" aria-hidden="true">04</p>
       <div>
-        <p class="section-label">Los límites</p>
         <h2 id="limites-title">Una herramienta de lectura, no un veredicto.</h2>
-        <p>La calidad y vigencia de cada registro dependen de la institución que lo publicó. Si una fuente contiene un campo vacío, una diferencia de formato o una actualización posterior, el sitio no debe inventar una explicación.</p>
-        <p>Las opiniones de visitantes, cuando están disponibles, no son información oficial ni una muestra representativa. Se muestran separadas de la nómina publicada.</p>
+        <p>La calidad y vigencia de cada registro dependen de la institución que lo publicó. Conservamos los campos ausentes sin completar ni inferir información.</p>
+        <p>Las opiniones son participación abierta de visitantes. No verificamos identidad ni relación con la institución; sus resultados no son representativos ni constituyen una evaluación oficial. Se muestran separadas de la nómina publicada.</p>
       </div>
     </section>
 
@@ -99,9 +97,10 @@ import Page from '../layouts/Page.astro';
 .section-number { margin: 0; color: var(--accent-ink); font: 900 32px/1 Impact, 'Arial Narrow', sans-serif; }
 .methodology h2 { margin: 0 0 18px; font: 700 clamp(26px, 4vw, 40px)/1 Georgia, 'Times New Roman', serif; letter-spacing: -.8px; }
 .methodology-section p:not(.section-number):not(.section-label) { max-width: 680px; margin: 0 0 14px; font-size: 14px; line-height: 1.8; }
-.process-list { display: grid; gap: 15px; margin: 24px 0 0; padding: 0; list-style: none; counter-reset: process; }
+.process-list { display: grid; gap: 24px; margin: 24px 0 0; padding: 0; list-style: none; counter-reset: process; }
 .process-list li { position: relative; padding: 16px 16px 16px 52px; border: 2px solid var(--ink); background: var(--white); font-size: 13px; line-height: 1.65; }
 .process-list li::before { content: counter(process); counter-increment: process; position: absolute; top: 15px; left: 16px; color: var(--accent-ink); font: 900 23px/1 Impact, 'Arial Narrow', sans-serif; }
+.methodology-section .process-list li p { margin: 8px 0 0; font-size: inherit; line-height: inherit; }
 .reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; width: calc(100% - 114px); max-width: 846px; border: 3px solid var(--ink); margin: 30px 0 46px 114px; }
 .reading-grid article { padding: 30px; background: var(--white); }
 .reading-grid article + article { border-left: 3px solid var(--ink); background: var(--accent); }
@@ -110,7 +109,7 @@ import Page from '../layouts/Page.astro';
 .plain-list li { padding: 9px 0; border-top: 1px dotted var(--divider-strong); }
 .plain-list li:last-child { border-bottom: 1px dotted var(--divider-strong); }
 .legal-section { border-top: 0; margin-top: 0; }
-.legal-links { display: grid; gap: 10px; margin-top: 22px; }
+.legal-links { display: grid; gap: 18px; margin-top: 22px; }
 .legal-links a { display: grid; gap: 5px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--white); text-decoration: none; }
 .legal-links a:hover { background: var(--accent); }
 .legal-links strong { font-size: 12px; }
@@ -131,7 +130,7 @@ import Page from '../layouts/Page.astro';
   .section-number { font-size: 23px; }
   .methodology h2 { font-size: 27px; }
   .methodology-section p:not(.section-number):not(.section-label) { font-size: 13px; line-height: 1.7; }
-  .process-list { gap: 10px; }
+  .process-list { gap: 20px; }
   .process-list li { padding: 13px 12px 13px 42px; font-size: 12px; }
   .process-list li::before { top: 12px; left: 12px; font-size: 20px; }
   .reading-grid { grid-template-columns: 1fr; width: calc(100% - 58px); margin: 24px 0 32px 58px; }

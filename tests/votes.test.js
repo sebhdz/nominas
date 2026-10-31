@@ -126,6 +126,49 @@ test('opinion buttons require widget success, block concurrent clicks and ignore
   await setImmediate();
 });
 
+test('background verification completes before the first profile and is reused across profiles', async t => {
+  const env = environment(t);
+  env.el('background-turnstile').dataset.sitekey = 'test-sitekey';
+  env.el('vote-turnstile').dataset.sitekey = 'test-sitekey';
+  globalThis.fetch = async () => response(empty);
+  const votes = await import('../src/scripts/votes.js?background-success');
+  t.after(() => votes.resetPerception());
+  votes.startBackgroundVerification();
+  await setImmediate();
+  assert.equal(env.renders, 1);
+  env.widget.callback('background-token');
+  await votes.loadPerception('test', 'First person');
+  assert.equal(env.el('vote-more').disabled, false);
+  await votes.loadPerception('test', 'Second person');
+  assert.equal(env.renders, 1);
+  assert.equal(env.removals, 0);
+  env.widget['expired-callback']();
+  await setImmediate();
+  assert.equal(env.removals, 1, 'an expired background check continues inside the open profile');
+  assert.equal(env.el('vote-more').disabled, true);
+  env.widget.callback('fresh-token');
+  assert.equal(env.el('vote-more').disabled, false);
+});
+
+test('pending background verification moves into the profile for accessible interaction', async t => {
+  const env = environment(t);
+  env.el('background-turnstile').dataset.sitekey = 'test-sitekey';
+  env.el('vote-turnstile').dataset.sitekey = 'test-sitekey';
+  globalThis.fetch = async () => response(empty);
+  const votes = await import('../src/scripts/votes.js?background-pending');
+  t.after(() => votes.resetPerception());
+  votes.startBackgroundVerification();
+  await setImmediate();
+  const background = env.widget;
+  await votes.loadPerception('test', 'Person');
+  assert.equal(env.removals, 1);
+  assert.equal(env.renders, 2);
+  background.callback('late-token');
+  assert.equal(env.el('vote-more').disabled, true);
+  env.widget.callback('profile-token');
+  assert.equal(env.el('vote-more').disabled, false);
+});
+
 test('without a public key payroll opinions stay disabled and no Turnstile script loads', async t => {
   const env = environment(t);
   delete globalThis.window.turnstile;
