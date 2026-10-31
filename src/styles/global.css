@@ -39,6 +39,10 @@ h1 { font: 900 clamp(72px, 10.7vw, 142px)/.94 Impact, 'Arial Narrow', 'Helvetica
 .headline-accent { color: var(--accent-ink); }
 .hero-bottom { display: flex; gap: 35px; align-items: center; margin-top: 10px; }
 .intro-copy { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 600; line-height: 1.65; max-width: 590px; margin: 0; }
+.methodology-link { display: inline-block; width: fit-content; font-size: 12px; font-weight: 700; line-height: 1.5; }
+.university-methodology { margin-top: 12px; }
+.legal-reference { max-width: 590px; margin: 5px 0 0; color: var(--accent-ink); font-size: 10px; font-weight: 700; letter-spacing: .2px; line-height: 1.55; }
+.legal-reference a { text-underline-offset: 3px; }
 .search-section { padding: 3px 0 0; }
 .search-label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; margin: 12px 0; }
 .search-box { display: flex; border: 3px solid var(--ink); background: var(--white); }
@@ -203,6 +207,8 @@ body:has(dialog[open]) { overflow: hidden; }
   h1 { font-size: clamp(46px, 12vw, 66px); letter-spacing: -1.5px; }
   .hero-bottom { margin-top: 22px; gap: 18px; align-items: flex-start; flex-direction: column; }
   .intro-copy { font-size: 13px; line-height: 1.7; }
+  .university-methodology { margin-top: 10px; font-size: 11px; }
+  .legal-reference { font-size: 9px; }
       .search-label { font-size: 11px; }
   input[type=search] { padding: 15px 10px; font-size: 16px; }
   .primary-button { padding: 10px; min-width: 93px; font-size: 21px; }

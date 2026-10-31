@@ -15,6 +15,7 @@ const { universities } = Astro.props;
       <span class="consultation-stamp">Consulta<br>abierta</span>
     </div>
   </section>
+  <p class="directory-methodology">¿Quieres saber cómo se preparan estos datos? <a href="/metodologia/">Consulta la metodología y las fuentes.</a></p>
 
   <section class="directory-search" aria-labelledby="directory-heading">
     <div class="directory-search-heading">
@@ -61,6 +62,8 @@ const { universities } = Astro.props;
 .cover-notes { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-top: 8px; }
 .cover-notes > p { margin: 0; font: italic 24px/1.4 Georgia, serif; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 4px; text-underline-offset: 6px; }
 .consultation-stamp { flex-shrink: 0; margin: 0 5px; padding: 10px 20px; background: var(--accent); border: 2px solid var(--ink); outline: 1px solid var(--ink); outline-offset: -6px; font-size: 14px; font-weight: 700; line-height: 1.1; letter-spacing: 1px; text-transform: uppercase; text-align: center; transform: rotate(-6deg); }
+.directory-methodology { margin: 0; padding: 0 0 24px; font-size: 12px; line-height: 1.6; }
+.directory-methodology a { font-weight: 700; }
 .directory-search { border-top: 2px solid var(--ink); padding-top: 26px; }
 .directory-search-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
 .directory-search-heading h2 { font: bold 28px/1.2 Georgia, serif; margin: 0; letter-spacing: -.6px; }

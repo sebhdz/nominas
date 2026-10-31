@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
-const { title = '¿Cuánto gana mi profe?', showDefinitions = true } = Astro.props;
+const { title = '¿Cuánto gana mi profe?', showDefinitions = true, skipTarget = 'search' } = Astro.props;
 const description = 'Sueldos de profesores y funcionarios. Se pagan con dinero público, así que se leen con ojos públicos.';
 ---
 <!doctype html>
@@ -16,7 +16,7 @@ const description = 'Sueldos de profesores y funcionarios. Se pagan con dinero p
   <slot name="head" />
 </head>
 <body>
-  <a class="skip-link" href="#search">Ir al buscador</a>
+  <a class="skip-link" href={`#${skipTarget}`}>Ir al contenido principal</a>
   <header class="tape" aria-label="Información pública">
     <div class="marquee-track" aria-hidden="true"><span>Información pública · Información pública · Información pública · Información pública · Información pública · Información pública · </span><span>Información pública · Información pública · Información pública · Información pública · Información pública · Información pública · </span></div>
   </header>

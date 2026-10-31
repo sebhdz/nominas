@@ -1,0 +1,149 @@
+---
+import Page from '../layouts/Page.astro';
+---
+<Page title="Metodología y fuentes — ¿Cuánto gana mi profe?" showDefinitions={false} skipTarget="contenido-principal">
+  <main id="contenido-principal" class="methodology page">
+    <a class="back-link" href="/">← Encuentra una universidad</a>
+
+    <header class="methodology-hero">
+      <p class="eyebrow">Metodología y fuentes</p>
+      <h1>LO PÚBLICO<br><span>SE PUEDE REVISAR.</span></h1>
+      <p class="methodology-intro">Este sitio hace más fácil consultar información que las universidades públicas ya reportan. No cambia lo que dicen los registros: ayuda a encontrarlos, leerlos y compartirlos.</p>
+    </header>
+
+    <section class="methodology-section legal-section" aria-labelledby="marco-title">
+      <p class="section-number" aria-hidden="true">01</p>
+      <div>
+        <p class="section-label">El marco público</p>
+        <h2 id="marco-title">El derecho a saber existe antes que este sitio.</h2>
+        <h3 class="legal-principle">Ningún reglamento estudiantil está por encima de la Constitución.</h3>
+        <p>Esta consulta no crea la obligación de transparencia: ayuda a leer información que debe estar disponible públicamente.</p>
+        <div class="legal-links">
+          <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf" target="_blank" rel="noopener noreferrer"><strong>Constitución, artículo 6.</strong><span>Reconoce el derecho a buscar, recibir y difundir información; establece el principio de máxima publicidad.</span></a>
+          <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LGTAIP.pdf" target="_blank" rel="noopener noreferrer"><strong>Ley General de Transparencia, artículo 65, fracción VII.</strong><span>Establece obligaciones de transparencia para que la información de las instituciones públicas esté disponible para cualquier persona.</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="methodology-section source-section" aria-labelledby="origen-title">
+      <p class="section-number" aria-hidden="true">02</p>
+      <div>
+        <p class="section-label">El origen</p>
+        <h2 id="origen-title">La fuente es pública.</h2>
+        <p>Los datos provienen de archivos publicados en la <a href="https://consultapublicamx.plataformadetransparencia.org.mx" target="_blank" rel="noopener noreferrer">Plataforma Nacional de Transparencia</a>. Cada universidad reporta su propia información, sus periodos y sus fechas de actualización.</p>
+        <p>Por eso, cada nómina del sitio identifica la institución y el periodo informado. La fuente oficial sigue siendo el registro de origen.</p>
+      </div>
+    </section>
+
+    <section class="methodology-section" aria-labelledby="proceso-title">
+      <p class="section-number" aria-hidden="true">03</p>
+      <div>
+        <p class="section-label">El proceso</p>
+        <h2 id="proceso-title">Del archivo público a una consulta legible.</h2>
+        <ol class="process-list">
+          <li><strong>Descarga.</strong> Partimos de los archivos públicos disponibles en la Plataforma Nacional de Transparencia.</li>
+          <li><strong>Revisión y preparación.</strong> Las descargas originales no se publican ni se conservan en el repositorio. Un <a href="https://github.com/sebhdz/nominas/tree/main/scripts/nominas" target="_blank" rel="noopener noreferrer">script automatizado y público</a> valida y estandariza sus campos para consulta, sin recalcular ni corregir valores. Registra el hash SHA-256 del archivo usado —una huella que permite detectar cambios— y una persona revisa el resultado antes de aprobar su publicación.</li>
+          <li><strong>Consulta.</strong> El resultado se publica como un sitio estático: buscar una nómina no consulta sistemas internos de una universidad.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="reading-grid" aria-label="Qué muestra y qué no hace el sitio">
+      <article>
+        <p class="section-label">Qué mostramos</p>
+        <h2>Lo que la fuente reporta.</h2>
+        <ul class="plain-list">
+          <li>Nombre, puesto y área o departamento publicados.</li>
+          <li>Importes brutos y netos cuando aparecen en el registro.</li>
+          <li>Institución, periodo y fecha de actualización disponibles.</li>
+        </ul>
+      </article>
+      <article>
+        <p class="section-label">Qué no hacemos</p>
+        <h2>Lo que el sitio no afirma.</h2>
+        <ul class="plain-list">
+          <li>No recalculamos ni corregimos remuneraciones reportadas.</li>
+          <li>No inferimos datos que la fuente no publicó.</li>
+          <li>No sustituimos los registros oficiales ni hablamos en nombre de una institución.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="methodology-section limits-section" aria-labelledby="limites-title">
+      <p class="section-number" aria-hidden="true">04</p>
+      <div>
+        <p class="section-label">Los límites</p>
+        <h2 id="limites-title">Una herramienta de lectura, no un veredicto.</h2>
+        <p>La calidad y vigencia de cada registro dependen de la institución que lo publicó. Si una fuente contiene un campo vacío, una diferencia de formato o una actualización posterior, el sitio no debe inventar una explicación.</p>
+        <p>Las opiniones de visitantes, cuando están disponibles, no son información oficial ni una muestra representativa. Se muestran separadas de la nómina publicada.</p>
+      </div>
+    </section>
+
+    <aside class="methodology-closing" aria-label="Compromiso del proyecto">
+      <p>HACER PÚBLICOS LOS DATOS ES EL INICIO.</p>
+      <p>Hacerlos legibles es transparencia.</p>
+    </aside>
+  </main>
+</Page>
+
+<style>
+.methodology { padding-top: 34px; padding-bottom: 58px; }
+.back-link { display: inline-block; margin-bottom: 54px; font-size: 12px; font-weight: 700; }
+.methodology-hero { max-width: 960px; padding-bottom: 70px; border-bottom: 3px solid var(--ink); }
+.eyebrow, .section-label { margin: 0 0 12px; font-size: 11px; font-weight: 700; letter-spacing: 1.25px; text-transform: uppercase; }
+.methodology h1 { max-width: none; font-size: clamp(48px, 9.8vw, 142px); }
+.methodology h1 span { color: var(--accent-ink); }
+.methodology h1 span { white-space: nowrap; }
+.methodology-intro { max-width: 650px; margin: 28px 0 0; font: 600 20px/1.55 Georgia, 'Times New Roman', serif; }
+.methodology-section { display: grid; grid-template-columns: 90px minmax(0, 760px); gap: 0 24px; max-width: 960px; padding: 46px 0; border-bottom: 1px dotted var(--divider-strong); }
+.section-number { margin: 0; color: var(--accent-ink); font: 900 32px/1 Impact, 'Arial Narrow', sans-serif; }
+.methodology h2 { margin: 0 0 18px; font: 700 clamp(26px, 4vw, 40px)/1 Georgia, 'Times New Roman', serif; letter-spacing: -.8px; }
+.methodology-section p:not(.section-number):not(.section-label) { max-width: 680px; margin: 0 0 14px; font-size: 14px; line-height: 1.8; }
+.process-list { display: grid; gap: 15px; margin: 24px 0 0; padding: 0; list-style: none; counter-reset: process; }
+.process-list li { position: relative; padding: 16px 16px 16px 52px; border: 2px solid var(--ink); background: var(--white); font-size: 13px; line-height: 1.65; }
+.process-list li::before { content: counter(process); counter-increment: process; position: absolute; top: 15px; left: 16px; color: var(--accent-ink); font: 900 23px/1 Impact, 'Arial Narrow', sans-serif; }
+.reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; width: calc(100% - 114px); max-width: 846px; border: 3px solid var(--ink); margin: 30px 0 46px 114px; }
+.reading-grid article { padding: 30px; background: var(--white); }
+.reading-grid article + article { border-left: 3px solid var(--ink); background: var(--accent); }
+.reading-grid h2 { font-size: 30px; }
+.plain-list { display: grid; gap: 0; margin: 20px 0 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.6; }
+.plain-list li { padding: 9px 0; border-top: 1px dotted var(--divider-strong); }
+.plain-list li:last-child { border-bottom: 1px dotted var(--divider-strong); }
+.legal-section { border-top: 0; margin-top: 0; }
+.legal-links { display: grid; gap: 10px; margin-top: 22px; }
+.legal-links a { display: grid; gap: 5px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--white); text-decoration: none; }
+.legal-links a:hover { background: var(--accent); }
+.legal-links strong { font-size: 12px; }
+.legal-links span { font-size: 12px; line-height: 1.6; }
+.legal-principle { max-width: 650px; margin: -7px 0 20px; color: var(--accent-ink); font: 700 clamp(19px, 2.3vw, 25px)/1.25 Georgia, 'Times New Roman', serif; }
+.limits-section { border-top: 3px solid var(--ink); margin-top: 46px; }
+.methodology-closing { max-width: 960px; margin-top: 46px; padding: 28px 32px; background: var(--ink); color: var(--paper); }
+.methodology-closing p { margin: 0; font: italic clamp(23px, 4vw, 39px)/1.2 Georgia, 'Times New Roman', serif; }
+.methodology-closing p:first-child { color: var(--accent); }
+.methodology-closing p + p { margin-top: 4px; }
+@media (max-width: 700px) {
+  .methodology { padding-top: 25px; padding-bottom: 38px; }
+  .back-link { margin-bottom: 38px; }
+  .methodology-hero { padding-bottom: 46px; }
+  .methodology h1 { font-size: clamp(31px, 9.8vw, 52px); letter-spacing: -1.5px; }
+  .methodology-intro { margin-top: 22px; font-size: 17px; }
+  .methodology-section { grid-template-columns: 48px minmax(0, 1fr); gap: 0 10px; padding: 32px 0; }
+  .section-number { font-size: 23px; }
+  .methodology h2 { font-size: 27px; }
+  .methodology-section p:not(.section-number):not(.section-label) { font-size: 13px; line-height: 1.7; }
+  .process-list { gap: 10px; }
+  .process-list li { padding: 13px 12px 13px 42px; font-size: 12px; }
+  .process-list li::before { top: 12px; left: 12px; font-size: 20px; }
+  .reading-grid { grid-template-columns: 1fr; width: calc(100% - 58px); margin: 24px 0 32px 58px; }
+  .reading-grid article { padding: 24px 20px; }
+  .reading-grid article + article { border-top: 3px solid var(--ink); border-left: 0; }
+  .reading-grid h2 { font-size: 26px; }
+  .plain-list { margin-top: 15px; font-size: 12px; }
+  .plain-list li { padding: 8px 0; }
+  .legal-section { margin-top: 0; }
+  .legal-links a { padding: 12px; }
+  .legal-principle { margin: -3px 0 16px; font-size: 19px; }
+  .limits-section { margin-top: 32px; }
+  .methodology-closing { margin-top: 32px; padding: 24px 20px; }
+}
+</style>
