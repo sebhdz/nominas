@@ -8,23 +8,20 @@ const { universities } = Astro.props;
   </header>
 
   <section class="directory-cover" aria-label="El dinero público se lee con ojos públicos">
-    <div class="cover-label"><span>De acceso público</span><span aria-hidden="true">Para leerse de cerca</span></div>
     <div class="cover-art" aria-hidden="true"><span>PÚBLICO</span></div>
     <div class="cover-notes">
       <p>La transparencia no es un favor.</p>
-      <span class="consultation-stamp">Consulta<br>abierta</span>
     </div>
   </section>
-  <p class="directory-methodology">¿Quieres saber cómo se preparan estos datos? <a href="/metodologia/">Consulta la metodología y las fuentes.</a></p>
+  <p class="directory-methodology"><a href="/metodologia/">¿De dónde salen los datos?</a></p>
 
   <section class="directory-search" aria-labelledby="directory-heading">
     <div class="directory-search-heading">
       <h2 id="directory-heading">Encuentra tu universidad.</h2>
-      <p>Busca la institución. Después, a tu profe.</p>
     </div>
-    <label class="search-label" for="search">Nombre o siglas de la universidad</label>
-    <div class="search-box"><input id="search" type="search" placeholder="Escribe aquí…" autocomplete="off" aria-controls="university-list"></div>
-    <div class="directory-index-heading"><span>Índice de instituciones</span><p id="university-count" role="status" aria-live="polite">{universities.length} instituciones disponibles</p></div>
+    <label class="sr-only" for="search">Nombre o siglas de la universidad</label>
+    <div class="search-box"><input id="search" type="search" placeholder="Nombre o siglas de tu universidad" autocomplete="off" aria-controls="university-list"></div>
+    <div class="directory-index-heading"><p id="university-count" role="status" aria-live="polite">{universities.length} instituciones disponibles</p></div>
     <ul id="university-list" class="university-list">
       {universities.map((university, index) => <li data-search={`${university.id} ${university.name}`}>
         <a href={`/nomina/?university=${encodeURIComponent(university.id)}`}>
@@ -55,10 +52,10 @@ const { universities } = Astro.props;
 .directory-masthead { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 28px 0 22px; border-bottom: 2px solid var(--ink); }
 .directory-masthead h1 { font: bold 28px/1.15 Georgia, serif; letter-spacing: -1px; text-transform: none; }
 .directory-masthead > p { margin: 0; font-size: 10px; line-height: 1.7; text-transform: uppercase; text-align: right; letter-spacing: .5px; }
-.directory-cover { padding: 22px 0 30px; }
+.directory-cover { padding: 22px 0 15px; }
 .cover-label { display: flex; justify-content: space-between; gap: 16px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; }
 .cover-art { overflow: hidden; padding-top: 12px; }
-.cover-art > span { display: block; width: fit-content; font: 900 clamp(76px, 23vw, 290px)/.94 Impact, 'Arial Narrow', 'Helvetica Neue', sans-serif; letter-spacing: .005em; transform: translateX(-.015em); }
+.cover-art > span { display: block; width: fit-content; font: 900 clamp(76px, 17vw, 210px)/.94 Impact, 'Arial Narrow', 'Helvetica Neue', sans-serif; letter-spacing: .005em; transform: translateX(-.015em); }
 .cover-notes { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-top: 8px; }
 .cover-notes > p { margin: 0; font: italic 24px/1.4 Georgia, serif; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 4px; text-underline-offset: 6px; }
 .consultation-stamp { flex-shrink: 0; margin: 0 5px; padding: 10px 20px; background: var(--accent); border: 2px solid var(--ink); outline: 1px solid var(--ink); outline-offset: -6px; font-size: 14px; font-weight: 700; line-height: 1.1; letter-spacing: 1px; text-transform: uppercase; text-align: center; transform: rotate(-6deg); }
@@ -90,11 +87,11 @@ const { universities } = Astro.props;
   .directory-masthead { padding: 22px 0 18px; align-items: flex-start; gap: 16px; }
   .directory-masthead h1 { max-width: 165px; font-size: 22px; line-height: 1.1; }
   .directory-masthead > p { font-size: 8px; letter-spacing: 0; }
-  .directory-cover { padding: 16px 0 24px; }
+  .directory-cover { padding: 16px 0 15px; }
   .cover-label { font-size: 8px; letter-spacing: .7px; }
   .cover-art { padding-top: 10px; }
   .cover-notes { padding-top: 12px; gap: 18px; }
-  .cover-notes > p { max-width: 200px; font-size: 17px; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+  .cover-notes > p { max-width: none; white-space: nowrap; font-size: clamp(13px, 4vw, 17px); text-decoration-thickness: 3px; text-underline-offset: 4px; }
   .consultation-stamp { font-size: 10px; padding: 9px 12px; }
   .directory-search { padding-top: 22px; }
   .directory-search-heading { margin-bottom: 18px; }

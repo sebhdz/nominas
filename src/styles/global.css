@@ -34,14 +34,16 @@ input:focus-visible, select:focus-visible { background-color: #f6ecdf; }
 .project-name { display: inline-block; margin-bottom: 20px; font-size: 19px; font-weight: 750; text-decoration: none; letter-spacing: -.4px; }
 .hero .project-name { margin-top: 0; max-width: 100%; overflow-wrap: anywhere; }
 .university-back { display: block; width: fit-content; font-size: 12px; margin: -6px 0 24px; }
-.hero { padding: 38px 0 34px; }
+.hero { padding: 28px 0 24px; }
 h1 { font: 900 clamp(72px, 10.7vw, 142px)/.94 Impact, 'Arial Narrow', 'Helvetica Neue', sans-serif; text-transform: uppercase; letter-spacing: -3px; margin: 0; max-width: 1000px; }
 .headline-accent { color: var(--accent-ink); }
 .hero-bottom { display: flex; gap: 35px; align-items: center; margin-top: 10px; }
 .intro-copy { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 600; line-height: 1.65; max-width: 590px; margin: 0; }
 .methodology-link { display: inline-block; width: fit-content; font-size: 12px; font-weight: 700; line-height: 1.5; }
 .university-methodology { margin-top: 12px; }
-.legal-reference { max-width: 590px; margin: 5px 0 0; color: var(--accent-ink); font-size: 10px; font-weight: 700; letter-spacing: .2px; line-height: 1.55; }
+.hero-context { margin-bottom: 20px; }
+.hero-context .university-methodology { margin-top: 0; }
+.legal-reference { max-width: 590px; margin: 6px 0 0; color: #625c52; font-size: 10px; font-weight: 400; line-height: 1.55; }
 .legal-reference a { text-underline-offset: 3px; }
 .search-section { padding: 3px 0 0; }
 .search-label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; margin: 12px 0; }
@@ -124,14 +126,15 @@ dialog::backdrop { background: #242321bb; }
 .person-identity { padding: 16px 0 18px; }
 #person-name { font-size: 30px; line-height: 1.12; letter-spacing: -.8px; margin: 0 0 16px; }
 .person-details { display: grid; gap: 3px; }
-.person-role, .person-area { font-size: 13px; line-height: 1.55; margin: 0; }
+.person-role, .person-area { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.45; margin: 0; }
 .person-role { font-weight: 700; }
 .person-area { color: #625c52; }
 .salary-summary { padding: 12px 14px; border: 2px solid var(--ink); background: var(--accent); }
 .salary-summary-title, .opinions-title { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
 .salaries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 10px 0 8px; border-bottom: 1px solid var(--divider-strong); }
+.salaries > div { min-width: 0; }
 .salary-label { font-size: 10px; font-weight: 700; letter-spacing: .7px; }
-.salaries strong { display: block; font-size: clamp(22px, 4.4vw, 29px); font-weight: 700; line-height: 1.1; margin-top: 5px; font-variant-numeric: tabular-nums; }
+.salaries strong { display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 27px; font-weight: 700; line-height: 1.2; margin-top: 5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .currency-note, .person-period { font-size: 10px; line-height: 1.55; }
 .salary-meta { display: flex; flex-wrap: wrap; gap: 2px 12px; padding-top: 8px; }
 .currency-note { margin: 0; }
@@ -154,6 +157,7 @@ dialog::backdrop { background: #242321bb; }
 .recommend-count { font-size: 14px; font-variant-numeric: tabular-nums; font-weight: 800; }
 .opinion-disclaimer { margin: 9px 0 0; color: #625c52; font-size: 10px; line-height: 1.55; }
 .recommend-status { font-size: 11px; margin: 8px 0 0; min-height: 16px; color: #625c52; }
+.recommend-status:empty, .perception-status:empty { display: none; }
 .perception-card { margin-top: 12px; padding: 14px 0 12px; border-top: 1px solid var(--divider); border-bottom: 0; }
 .perception-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
 .perception-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
@@ -224,13 +228,13 @@ body:has(dialog[open]) { overflow: hidden; }
 @media (max-width: 560px) {
   .page { padding: 0 18px; }
   .tape { height: 32px; font-size: 10px; line-height: 32px; }
-  .project-name { margin-bottom: 16px; font-size: 17px; }
-  .hero { padding: 28px 0; }
+  .project-name { margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
+  .university-back { font-size: 11px; margin-bottom: 18px; }
+  .hero { padding: 22px 0; }
   h1 { font-size: clamp(46px, 12vw, 66px); letter-spacing: -1.5px; }
-  .hero-bottom { margin-top: 22px; gap: 18px; align-items: flex-start; flex-direction: column; }
-  .intro-copy { font-size: 13px; line-height: 1.7; }
+  .hero-bottom { margin-top: 9px; gap: 18px; align-items: flex-start; flex-direction: column; }
+  .intro-copy { font-size: 12px; line-height: 1.4; }
   .university-methodology { margin-top: 10px; font-size: 11px; }
-  .legal-reference { font-size: 9px; }
       .search-label { font-size: 11px; }
   input[type=search] { padding: 15px 10px; font-size: 16px; }
   .primary-button { padding: 10px; min-width: 93px; font-size: 21px; }
@@ -243,10 +247,11 @@ body:has(dialog[open]) { overflow: hidden; }
   #person-name { font-size: 23px; }
   .salaries { gap: 14px; }
   .salary-label { font-size: 10px; }
-  .salaries strong { font-size: 26px; }
+  .salary-summary { padding: 10px; }
+  .salaries strong { font-size: clamp(17px, 5vw, 24px); }
+  .recommend-header, .perception-header { flex-direction: column; align-items: flex-start; gap: 6px; }
   .recommend-actions { grid-template-columns: 1fr; gap: 6px; }
-  .perception-actions { grid-template-columns: 1fr; gap: 6px; }
-  .perception-btn { flex-direction: row; justify-content: space-between; padding: 10px 14px; }
+  .perception-actions { gap: 6px; }
 }
 
 .vote-verification { margin-top: 20px; }

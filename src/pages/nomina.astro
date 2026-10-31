@@ -8,10 +8,12 @@ import RecordsTable from "../components/RecordsTable.astro";
     <section class="hero" aria-labelledby="titulo">
       <p id="university-name" class="project-name">Nómina</p>
       <a class="university-back" href="/">Buscar otra universidad</a>
+      <div class="hero-context">
+        <a class="methodology-link university-methodology" href="/metodologia/">¿Cómo obtenemos y presentamos estos datos?</a>
+        <p class="legal-reference"><a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf" target="_blank" rel="noopener noreferrer">El artículo 6° constitucional</a> protege el derecho a acceder y difundir información pública.</p>
+      </div>
       <h1 id="titulo">¿Cuánto gana<br><span class="headline-accent">mi profe?</span></h1>
       <div class="hero-bottom"><p class="intro-copy">Sueldos de profesores y funcionarios. Se pagan con dinero público, así que se leen con ojos públicos.</p></div>
-      <a class="methodology-link university-methodology" href="/metodologia/">¿Cómo obtenemos y presentamos estos datos?</a>
-      <p class="legal-reference"><a href="/metodologia/">El artículo 6° constitucional</a> protege el derecho a acceder y difundir información pública. Aquí sólo hacemos más visible lo que las instituciones ya publicaron.</p>
     </section>
     <p id="university-error" role="status" hidden></p>
     <div id="background-turnstile" data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || ''} aria-label="Verificación para participar en opiniones"></div>
@@ -58,9 +60,9 @@ import RecordsTable from "../components/RecordsTable.astro";
         <div class="person-details"><p id="person-role" class="person-role"></p><p id="person-area" class="person-area"></p></div>
       </section>
       <section class="salary-summary" aria-label="Sueldo mensual reportado">
-        <p class="salary-summary-title">SUELDO MENSUAL REPORTADO</p>
+        <p class="salary-summary-title">SUELDO MENSUAL · MXN</p>
         <div class="salaries"><div><span class="salary-label">BRUTO</span><strong id="person-gross"></strong></div><div><span class="salary-label">NETO</span><strong id="person-net"></strong></div></div>
-        <div class="salary-meta"><p class="currency-note">MXN · importes mensuales reportados.</p><p id="person-period" class="person-period"></p></div>
+        <div class="salary-meta"><p id="person-period" class="person-period"></p></div>
       </section>
       <section class="opinions-section" aria-label="Opiniones de visitantes">
         <p class="opinions-title">OPINIONES DE VISITANTES</p>
