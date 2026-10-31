@@ -107,7 +107,7 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   control('#results').children[0].children[0].children[0].dispatch('click');
   assert.equal(new URL(location.href).searchParams.get('university'), 'prueba');
   assert.equal(new URL(location.href).searchParams.get('persona'), '2');
-  assert.match(control('#person-period').textContent, /Universidad de prueba/);
+  assert.match(control('#person-period').textContent, /Periodo informado: 1 de abril de 2026/);
   assert.match(control('#person-source-date').textContent, /2 de julio de 2026/);
   control('#pensions-tab').dispatch('click');
   assert.equal(control('#pensions-panel').hidden, false);

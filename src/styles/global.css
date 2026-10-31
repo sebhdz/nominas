@@ -112,18 +112,28 @@ dialog::backdrop { background: #242321bb; }
 .dialog-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .eyebrow { font-size: 11px; margin: 0; letter-spacing: 1px; }
 .close-button { border: 2px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); width: 40px; height: 40px; font-size: 18px; }
-.person-period { font-size: 11px; margin: 28px 0 15px; }
-#person-name { font-size: 27px; line-height: 1.2; letter-spacing: -.8px; margin: 0 0 18px; }
-.person-role, .person-area { font-size: 13px; line-height: 1.6; margin: 0 0 6px; }
-.salaries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 24px 0; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); margin-top: 24px; }
-.salary-label { font-size: 11px; }
-.salaries strong { display: block; font-size: 30px; font-weight: 650; line-height: 1.2; margin-top: 12px; font-variant-numeric: tabular-nums; }
-.salaries p { font-size: 11px; margin-bottom: 0; }
-.currency-note { font-size: 11px; line-height: 1.7; }
-.recommend-card { margin-top: 24px; padding: 18px 0 16px; border-top: 2px solid var(--ink); }
+.person-identity { padding: 16px 0 18px; }
+#person-name { font-size: 30px; line-height: 1.12; letter-spacing: -.8px; margin: 0 0 16px; }
+.person-details { display: grid; gap: 3px; }
+.person-role, .person-area { font-size: 13px; line-height: 1.55; margin: 0; }
+.person-role { font-weight: 700; }
+.person-area { color: #625c52; }
+.salary-summary { padding: 12px 14px; border: 2px solid var(--ink); background: var(--accent); }
+.salary-summary-title, .opinions-title { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.salaries { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 10px 0 8px; border-bottom: 1px solid var(--divider-strong); }
+.salary-label { font-size: 10px; font-weight: 700; letter-spacing: .7px; }
+.salaries strong { display: block; font-size: clamp(22px, 4.4vw, 29px); font-weight: 700; line-height: 1.1; margin-top: 5px; font-variant-numeric: tabular-nums; }
+.currency-note, .person-period { font-size: 10px; line-height: 1.55; }
+.salary-meta { display: flex; flex-wrap: wrap; gap: 2px 12px; padding-top: 8px; }
+.currency-note { margin: 0; }
+.person-period { margin: 0; }
+.opinions-section { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--ink); }
+.opinions-title { margin-bottom: 6px; color: var(--accent-ink); }
+.recommend-card { margin-top: 12px; padding: 0 0 12px; border-top: 0; }
 .recommend-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
 .recommend-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
 .recommend-badge { font-size: 11px; font-weight: 600; color: #625c52; }
+.opinion-context { margin: 0 0 12px; color: #625c52; font-size: 10px; line-height: 1.55; }
 .recommend-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .recommend-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 10px 16px; background: var(--white); border: 2px solid var(--ink); color: var(--ink); font-size: 12px; font-weight: 700; }
 .recommend-btn:hover { background: #f6ecdf; }
@@ -133,8 +143,9 @@ dialog::backdrop { background: #242321bb; }
 .recommend-icon-down { transform: rotate(180deg); }
 .recommend-text { flex-grow: 1; text-align: left; }
 .recommend-count { font-size: 14px; font-variant-numeric: tabular-nums; font-weight: 800; }
+.opinion-disclaimer { margin: 9px 0 0; color: #625c52; font-size: 10px; line-height: 1.55; }
 .recommend-status { font-size: 11px; margin: 8px 0 0; min-height: 16px; color: #625c52; }
-.perception-card { margin-top: 18px; padding: 18px 0 16px; border-top: 1px solid var(--divider); border-bottom: 2px solid var(--ink); }
+.perception-card { margin-top: 12px; padding: 14px 0 12px; border-top: 1px solid var(--divider); border-bottom: 0; }
 .perception-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
 .perception-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
 .perception-total { font-size: 11px; color: #625c52; }
@@ -154,10 +165,12 @@ dialog::backdrop { background: #242321bb; }
 .dot-less { background: #e05252; }
 .btn-count { font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 800; }
 .perception-status { font-size: 11px; margin: 10px 0 0; min-height: 16px; color: #625c52; }
-.person-source { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 24px; font-size: 11px; }
-.share-status { font-size: 12px; line-height: 1.6; min-height: 19px; }
+.person-reference { margin-top: 8px; padding: 16px 0 0; border-top: 2px solid var(--ink); }
+.source-date { margin: 0 0 12px; color: #625c52; font-size: 10px; line-height: 1.55; }
+.reference-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.share-status { font-size: 11px; line-height: 1.6; min-height: 17px; margin: 8px 0 0; }
 .share-status input { display: block; margin-top: 6px; width: 100%; }
-.source-reference { font-size: 11px; }
+.source-reference { font-size: 11px; font-weight: 700; }
 .skip-link { position: absolute; top: -100px; left: 16px; background: var(--paper); color: var(--ink); padding: 12px; z-index: 10; }
 .skip-link:focus { top: 5px; }
 body:has(dialog[open]) { overflow: hidden; }
@@ -225,7 +238,6 @@ body:has(dialog[open]) { overflow: hidden; }
   .recommend-actions { grid-template-columns: 1fr; gap: 6px; }
   .perception-actions { grid-template-columns: 1fr; gap: 6px; }
   .perception-btn { flex-direction: row; justify-content: space-between; padding: 10px 14px; }
-  .person-source { flex-direction: column; align-items: flex-start; }
 }
 
 .vote-verification { margin-top: 20px; }

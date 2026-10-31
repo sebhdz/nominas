@@ -275,7 +275,7 @@ function openPerson(person, trigger = search, updateURL = true) {
   $('#person-area').textContent = readableLabel(person.area);
   $('#person-gross').textContent = formatMoney(person.bruto);
   $('#person-net').textContent = formatMoney(person.neto);
-  $('#person-period').textContent = `${university.name} · ${formatPeriod(university.period)}`;
+  $('#person-period').textContent = `Periodo informado: ${formatPeriod(university.period)}`;
   $('#person-source-date').textContent = `Actualización en la fuente: ${formatDate(person.actualizacion)}`;
   $('#share-status').textContent = '';
   if (updateURL) {

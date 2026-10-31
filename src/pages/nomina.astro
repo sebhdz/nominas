@@ -50,10 +50,20 @@ import RecordsTable from "../components/RecordsTable.astro";
     <div class="results-footer"><p id="status" role="status" aria-live="polite">Cargando los datos públicos…</p><nav id="pagination" class="pagination" aria-label="Páginas de resultados" hidden><button id="previous-page" class="text-button" type="button">Anterior</button><span id="page-label"></span><button id="next-page" class="text-button" type="button">Siguiente</button></nav></div>
   </main>
   <dialog id="person-dialog" aria-labelledby="person-name">
-    <div class="dialog-top"><span class="eyebrow">REMUNERACIÓN MENSUAL</span><button id="close-dialog" class="close-button" aria-label="Cerrar ficha" type="button">✕</button></div>
-    <div class="person-content"><p id="person-period" class="person-period"></p><h2 id="person-name"></h2><p id="person-role" class="person-role"></p><p id="person-area" class="person-area"></p>
-      <div class="salaries"><div><span class="salary-label">BRUTO MENSUAL</span><strong id="person-gross"></strong><p>Antes de deducciones</p></div><div><span class="salary-label">NETO MENSUAL</span><strong id="person-net"></strong><p>Después de deducciones</p></div></div>
-      <p class="currency-note">Pesos mexicanos (MXN). Importes mensuales reportados, no acumulados del periodo informado.</p>
+    <div class="dialog-top"><span class="eyebrow">NÓMINA PÚBLICA</span><button id="close-dialog" class="close-button" aria-label="Cerrar ficha" type="button">✕</button></div>
+    <div class="person-content">
+      <section class="person-identity">
+        <h2 id="person-name"></h2>
+        <div class="person-details"><p id="person-role" class="person-role"></p><p id="person-area" class="person-area"></p></div>
+      </section>
+      <section class="salary-summary" aria-label="Sueldo mensual reportado">
+        <p class="salary-summary-title">SUELDO MENSUAL REPORTADO</p>
+        <div class="salaries"><div><span class="salary-label">BRUTO</span><strong id="person-gross"></strong></div><div><span class="salary-label">NETO</span><strong id="person-net"></strong></div></div>
+        <div class="salary-meta"><p class="currency-note">MXN · importes mensuales reportados.</p><p id="person-period" class="person-period"></p></div>
+      </section>
+      <section class="opinions-section" aria-label="Opiniones de visitantes">
+        <p class="opinions-title">OPINIONES DE VISITANTES</p>
+        <p class="opinion-context">Participación abierta de visitantes; no es una encuesta representativa.</p>
       <div class="vote-verification">
         <div id="vote-turnstile" data-sitekey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || ''}></div>
         <p id="vote-verification-status" role="status" aria-live="polite" hidden>
@@ -64,26 +74,27 @@ import RecordsTable from "../components/RecordsTable.astro";
       </div>
       <section class="recommend-card" aria-labelledby="recommend-title">
         <div class="recommend-header">
-          <span id="recommend-title" class="recommend-title">¿RECOMIENDAS A ESTE PROFESOR?</span>
+          <span id="recommend-title" class="recommend-title">¿RECOMIENDAS A ESTA PERSONA EN ESTE CARGO?</span>
           <span id="recommend-badge" class="recommend-badge" aria-live="polite">Sin opiniones</span>
         </div>
-        <div class="recommend-actions" role="group" aria-label="Recomendar o no al docente">
+        <div class="recommend-actions" role="group" aria-label="Recomendar o no a esta persona en su cargo">
           <button id="vote-recommend-yes" disabled class="recommend-btn" type="button" data-choice="yes" aria-pressed="false">
             <svg class="recommend-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H3V10zM7 10l5-7a2 2 0 0 1 2 2l-1 5h6a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7"/></svg>
-            <span class="recommend-text">Sí, lo recomiendo</span>
+            <span class="recommend-text">Sí, la recomendaría</span>
             <span id="count-rec-yes" class="recommend-count">0</span>
           </button>
           <button id="vote-recommend-no" disabled class="recommend-btn" type="button" data-choice="no" aria-pressed="false">
             <svg class="recommend-icon recommend-icon-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v10H3V10zM7 10l5-7a2 2 0 0 1 2 2l-1 5h6a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7"/></svg>
-            <span class="recommend-text">No lo recomiendo</span>
+            <span class="recommend-text">No la recomendaría</span>
             <span id="count-rec-no" class="recommend-count">0</span>
           </button>
         </div>
+        <p class="opinion-disclaimer">Refleja experiencias personales, no una evaluación oficial.</p>
         <p id="recommend-status" class="recommend-status" role="status" aria-live="polite"></p>
       </section>
       <section class="perception-card" aria-labelledby="perception-title">
         <div class="perception-header">
-          <span id="perception-title" class="perception-title">¿QUÉ OPINAS DE ESTE SUELDO?</span>
+          <span id="perception-title" class="perception-title">¿CÓMO PERCIBES ESTE SUELDO?</span>
           <span id="perception-total" class="perception-total" aria-live="polite">0 opiniones</span>
         </div>
         <div class="perception-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Distribución de opiniones">
@@ -94,24 +105,29 @@ import RecordsTable from "../components/RecordsTable.astro";
         <div class="perception-actions" role="group" aria-label="Opciones de percepción sobre el sueldo">
           <button id="vote-more" disabled class="perception-btn" type="button" data-choice="more" aria-pressed="false">
             <span class="btn-dot dot-more" aria-hidden="true"></span>
-            <span class="btn-text">Merece más</span>
+            <span class="btn-text">Bajo</span>
             <span id="count-more" class="btn-count">0</span>
           </button>
           <button id="vote-fair" disabled class="perception-btn" type="button" data-choice="fair" aria-pressed="false">
             <span class="btn-dot dot-fair" aria-hidden="true"></span>
-            <span class="btn-text">Me parece justo</span>
+            <span class="btn-text">Adecuado</span>
             <span id="count-fair" class="btn-count">0</span>
           </button>
           <button id="vote-less" disabled class="perception-btn" type="button" data-choice="less" aria-pressed="false">
             <span class="btn-dot dot-less" aria-hidden="true"></span>
-            <span class="btn-text">Merece menos</span>
+            <span class="btn-text">Alto</span>
             <span id="count-less" class="btn-count">0</span>
           </button>
         </div>
+        <p class="opinion-disclaimer">Refleja una percepción personal; no determina si el salario es correcto.</p>
         <p id="perception-status" class="perception-status" role="status" aria-live="polite"></p>
       </section>
-      <div class="person-source"><span id="person-source-date"></span><button id="share-person" class="text-button" type="button">Copiar enlace</button></div>
-      <p id="share-status" class="share-status" role="status"></p><a class="source-reference" href="https://consultapublicamx.plataformadetransparencia.org.mx" target="_blank" rel="noopener noreferrer">Consultar la fuente oficial</a>
+      </section>
+      <section class="person-reference" aria-label="Fuente y acciones">
+        <p id="person-source-date" class="source-date"></p>
+        <div class="reference-actions"><a class="source-reference" href="https://consultapublicamx.plataformadetransparencia.org.mx" target="_blank" rel="noopener noreferrer">Consultar la fuente oficial</a><button id="share-person" class="text-button" type="button">Copiar enlace</button></div>
+        <p id="share-status" class="share-status" role="status"></p>
+      </section>
     </div>
   </dialog>
   <noscript><p class="page">Activa JavaScript para usar el buscador de nóminas.</p></noscript>
