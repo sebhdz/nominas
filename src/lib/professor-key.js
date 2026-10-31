@@ -18,3 +18,24 @@ export function getProfessorKey(universityId, fullName) {
   const part2 = (h2 >>> 0).toString(16).padStart(8, '0');
   return `${part1}${part2}`;
 }
+
+export function getProfessorSlug(universityId, fullName) {
+  const uni = String(universityId || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const name = String(fullName || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  if (!uni && !name) return 'desconocido';
+  if (!uni) return name;
+  if (!name) return uni;
+  return `${uni}:${name}`;
+}

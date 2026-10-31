@@ -231,3 +231,33 @@ test('a blocked Turnstile script can be retried and late loading cannot render a
   scripts[1].onload();
   await secondAttempt;
 });
+
+test('fetchBatchOpinions queries batch endpoint and returns results safely', async t => {
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  let calledUrl = '';
+  let calledBody = null;
+  globalThis.fetch = async (url, options) => {
+    calledUrl = url;
+    calledBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({
+        results: {
+          'uaa:juan-perez': { total_recommendations: 10, recommends_yes: 8, recommend_percentage: 80 },
+        },
+      }),
+    };
+  };
+
+  const { fetchBatchOpinions } = await import('../src/scripts/votes.js?batch-test');
+  const res = await fetchBatchOpinions(['uaa:juan-perez', 'uaa:ana-lopez']);
+  assert.match(calledUrl, /\/votes\/batch$/);
+  assert.deepEqual(calledBody, { keys: ['uaa:juan-perez', 'uaa:ana-lopez'] });
+  assert.equal(res['uaa:juan-perez'].recommend_percentage, 80);
+
+  globalThis.fetch = async () => { throw new Error('CORS or network error'); };
+  const fallback = await fetchBatchOpinions(['uaa:juan-perez']);
+  assert.deepEqual(fallback, {});
+});

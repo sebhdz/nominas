@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getProfessorKey } from '../src/lib/professor-key.js';
+import { getProfessorKey, getProfessorSlug } from '../src/lib/professor-key.js';
 
 test('getProfessorKey is deterministic across case, accents, and spacing', () => {
   const key1 = getProfessorKey('uaa', 'ANA PÉREZ');
@@ -26,4 +26,10 @@ test('getProfessorKey handles null or empty inputs gracefully', () => {
   assert.match(keyEmpty, /^[a-f0-9]{16}$/);
   const keyNull = getProfessorKey(null, null);
   assert.equal(keyEmpty, keyNull);
+});
+
+test('getProfessorSlug generates human-readable slug with colon', () => {
+  assert.equal(getProfessorSlug('uaa', 'ANA PÉREZ'), 'uaa:ana-perez');
+  assert.equal(getProfessorSlug('uaa', 'JUAN CARLOS ARREDONDO HERNANDEZ'), 'uaa:juan-carlos-arredondo-hernandez');
+  assert.equal(getProfessorSlug('', ''), 'desconocido');
 });

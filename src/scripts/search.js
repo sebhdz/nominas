@@ -1,5 +1,6 @@
 import { findPeople, findPensioners, normalize } from './search-utils.js';
-import { loadPerception, resetPerception, setupPerceptionListeners, startBackgroundVerification } from './votes.js';
+import { loadPerception, resetPerception, setupPerceptionListeners, startBackgroundVerification, fetchBatchOpinions } from './votes.js';
+import { getProfessorKey } from '../lib/professor-key.js';
 
 const $ = selector => document.querySelector(selector);
 const search = $('#search');
@@ -102,8 +103,63 @@ function updatePagination() {
   $('#next-page').disabled = page >= pages;
 }
 
+let tableRenderGeneration = 0;
+
+function createThumbSvg(isDown = false) {
+  if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', `row-acceptance-icon${isDown ? ' row-acceptance-icon-down' : ''}`);
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M7 10v10H3V10zM7 10l5-7a2 2 0 0 1 2 2l-1 5h6a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7');
+    svg.append(path);
+    return svg;
+  }
+  const span = element('span', `row-acceptance-icon${isDown ? ' row-acceptance-icon-down' : ''}`);
+  span.textContent = isDown ? '👎' : '👍';
+  return span;
+}
+
+function renderRowAcceptance(container, stats) {
+  if (!container || !stats || !stats.total_recommendations) return;
+
+  const total = stats.total_recommendations;
+  const yes = stats.recommends_yes || 0;
+  const pctYes = Math.round((yes / total) * 100);
+  const pctNo = 100 - pctYes;
+
+  container.replaceChildren();
+
+  const track = element('div', 'row-acceptance-track');
+  track.setAttribute('title', `${pctYes}% lo recomienda (${total} ${total === 1 ? 'opinión' : 'opiniones'})`);
+  track.setAttribute('role', 'progressbar');
+  track.setAttribute('aria-valuenow', String(pctYes));
+  track.setAttribute('aria-valuemin', '0');
+  track.setAttribute('aria-valuemax', '100');
+  track.setAttribute('aria-label', `${pctYes}% de recomendación`);
+
+  const segYes = element('div', 'row-acceptance-seg row-acceptance-seg-yes');
+  segYes.style.width = `${pctYes}%`;
+  const segNo = element('div', 'row-acceptance-seg row-acceptance-seg-no');
+  segNo.style.width = `${pctNo}%`;
+  track.append(segYes, segNo);
+
+  const label = element('span', 'row-acceptance-pct', `${pctYes}%`);
+
+  container.append(createThumbSvg(false), track, createThumbSvg(true), label);
+}
+
 // Both datasets use the same row structure and responsive styles.
 function renderTableResults(target, pension = false) {
+  tableRenderGeneration += 1;
+  const currentRender = tableRenderGeneration;
+
   target.replaceChildren();
   updatePagination();
   const offset = (page - 1) * PAGE_SIZE;
@@ -116,6 +172,7 @@ function renderTableResults(target, pension = false) {
     row.append(empty);
     target.append(row);
   }
+  const rowContainers = [];
   for (const person of shown) {
     const row = element('tr');
     const nameCell = element('td', 'name-cell');
@@ -128,6 +185,13 @@ function renderTableResults(target, pension = false) {
       name.addEventListener('click', () => openPerson(person, name));
     }
     nameCell.append(name);
+    if (!pension && university?.id) {
+      const profKey = getProfessorKey(university.id, person.nombre);
+      const acceptanceEl = element('div', 'row-acceptance');
+      acceptanceEl.dataset.profKey = profKey;
+      nameCell.append(acceptanceEl);
+      rowContainers.push({ key: profKey, el: acceptanceEl });
+    }
     const role = element('td', 'role-cell', readableLabel(pension ? person.tipo : person.puesto));
     if (pension) {
       role.append(element('span', 'record-detail', readableLabel(person.estatus)));
@@ -145,6 +209,19 @@ function renderTableResults(target, pension = false) {
   }
   status.textContent = `Mostrando ${shown.length ? offset + 1 : 0}–${offset + shown.length} de ${matches.length.toLocaleString('es-MX')} registros`;
   target.setAttribute('aria-busy', 'false');
+
+  if (rowContainers.length > 0) {
+    const keys = rowContainers.map(r => r.key);
+    fetchBatchOpinions(keys).then(results => {
+      if (currentRender !== tableRenderGeneration) return;
+      if (!results || typeof results !== 'object') return;
+      for (const { key, el } of rowContainers) {
+        if (key && results[key]) {
+          renderRowAcceptance(el, results[key]);
+        }
+      }
+    }).catch(() => {});
+  }
 }
 
 function renderResults() {
