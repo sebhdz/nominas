@@ -187,7 +187,15 @@ function renderTableResults(target, pension = false) {
     if (!pension) {
       name.type = 'button';
       name.setAttribute('aria-label', `Ver sueldo de ${person.nombre}`);
-      name.addEventListener('click', () => openPerson(person, name));
+      name.addEventListener('click', (event) => {
+        event?.stopPropagation?.();
+        openPerson(person, name);
+      });
+      row.classList.add('clickable-row');
+      row.addEventListener('click', () => {
+        if (window.getSelection?.()?.toString?.()) return;
+        openPerson(person, name);
+      });
     }
     nameCell.append(name);
     if (!pension && university?.id) {

@@ -29,7 +29,7 @@ test('discovers institutions without a registry and publishes only their latest 
   assert.equal(catalog.length, 1);
   assert.equal(catalog[0].id, 'prueba');
   assert.equal(catalog[0].year, '2026');
-  assert.equal(catalog[0].name, 'Universidad de prueba');
+  assert.equal(catalog[0].name, 'UNIVERSIDAD DE PRUEBA');
   assert.equal(catalog[0].url, '/data/prueba/2026.json');
   assert.deepEqual(catalog[0].updates, ['2026-07-02']);
   await writePreparedJson(path.join(root, 'prueba/2026/nomina.json'), dataset({ estado: 'bloqueado' }));

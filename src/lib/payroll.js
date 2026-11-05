@@ -31,7 +31,7 @@ export async function discoverUniversities(root = processedRoot) {
     }
     universities.push({
       id: directory.name,
-      name: data.institucion.replace(/^[A-Z]{3}\s+-\s+/, ''),
+      name: data.institucion.replace(/^[A-Z]{3}\s+-\s+/, '').toUpperCase(),
       year,
       period: data.registros[0].periodo,
       updates: [...new Set(data.registros.map((record) => record.actualizacionFuente).filter(Boolean))].sort(),
