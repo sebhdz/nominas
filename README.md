@@ -10,6 +10,7 @@ The website is static Astro with CSS and browser JavaScript. Payroll preparation
 | --- | --- |
 | Understand principles, scope, and human responsibility | [Project guidance](AGENTS.md) |
 | Add a university or update an existing university's data | [Payroll preparation](scripts/nominas/README.md) |
+| Prepare or update teacher performance evaluations | [Evaluation preparation](scripts/evaluaciones/README.md) |
 | Extend behavior, understand data contracts, or add a screen | [Architecture](ARCHITECTURE.md) |
 | Change appearance or interaction design | [Visual design](DESIGN.md) |
 | Publish or verify production behavior | [Deployment](DEPLOYMENT.md) |
