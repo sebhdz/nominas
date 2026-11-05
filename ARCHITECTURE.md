@@ -132,3 +132,9 @@ The current skip link targets `#search`. A screen without a search control needs
 Use locally scoped Astro `<style>` blocks for screen/component styles and existing CSS variables for shared values. Change global CSS only for genuinely shared rules. A static content page needs no browser controller; add JavaScript only for an actual interaction. Extract a component for an independent responsibility or reuse, not as a mandatory wrapper for every new page.
 
 Run the required checks, inspect the generated route in `dist/`, and verify its URL through `npm run preview`. Check relevant mobile/desktop views when authorized browser access is available. The owning validation rules remain in [AGENTS.md](AGENTS.md).
+
+### Institutional evaluations
+
+Optional prepared files at `data/evaluations/processed/<id>.json` join to payroll records at build time by normalized name. Preparation and provenance belong to the [evaluation guide](scripts/evaluaciones/README.md). No evaluation service or runtime request is involved.
+
+Matching search records include `evaluacion` (arithmetic mean in the original scale), `evaluacionMaximo` (scale maximum), `evaluacionRegistros` (number of grouped source rows), and `evaluacionPeriodo` (evaluation period label, independent of payroll). Unmatched records omit these fields. `src/lib/evaluation.js` derives the display equivalence out of 10 for both table and profile, preserving the original score. The table no longer requests visitor opinion summaries; the profile still uses the separate opinion service without changes to its keys or storage.

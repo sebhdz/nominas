@@ -1,6 +1,7 @@
 {
   "version": 1,
   "identificadorInstitucion": "uaa",
+  "periodo": "2026-01",
   "puntajeMaximo": 40,
   "fuente": {
     "archivo": "data/evaluations/raw/Evaluacion_Docentes_UAA.xlsx",

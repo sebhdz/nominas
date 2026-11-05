@@ -159,6 +159,9 @@ test("conserva búsqueda, filtros y enlace si se editan antes de terminar la des
             bruto: 200,
             neto: 100,
             evaluacion: 36.27,
+            evaluacionMaximo: 40,
+            evaluacionRegistros: 2,
+            evaluacionPeriodo: "2026-01",
           },
           {
             id: 2,
@@ -237,9 +240,11 @@ test("conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   control("#results").children[0].children[0].children[0].dispatch("click");
   assert.equal(control("#person-evaluation").hidden, false);
   assert.equal(
-    control("#person-evaluation").textContent,
-    "Resultado de evaluación de desempeño 2026-01: 36.27 de 40 puntos",
+    control("#person-evaluation").children[1].textContent,
+    "9.07 / 10",
   );
+  assert.equal(control("#person-evaluation").children[2].textContent, "36.27 / 40 · escala original");
+  assert.equal(control("#person-evaluation").children[3].textContent, "Promedio de 2 resultados institucionales · 2026-01");
   control("#search").value = "Andres";
   control("#search").dispatch("input");
   await new Promise((resolve) => setTimeout(resolve, 150));

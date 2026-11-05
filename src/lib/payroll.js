@@ -98,7 +98,7 @@ export function toSearchPeople(data, evaluations = null) {
   const evaluationScores = new Map(
     evaluationList
       .filter(entry => entry && Number.isFinite(entry.calificacion))
-      .map(entry => [normalizeName(entry.nombreNormalizado || entry.nombre), entry.calificacion])
+      .map(entry => [normalizeName(entry.nombreNormalizado || entry.nombre), entry])
   );
   return data.registros.map((record) => {
     const nombres = record.nombre.nombres || '';
@@ -116,7 +116,12 @@ export function toSearchPeople(data, evaluations = null) {
       // input invalidates old row links rather than pointing to another person.
       id: recordId(data, record),
       ...(benefitUrls.has(recordId(data, record)) && { prestacionesUrl: benefitUrls.get(recordId(data, record)) }),
-      ...(Number.isFinite(evaluacion) && { evaluacion }),
+      ...(evaluacion && {
+        evaluacion: evaluacion.calificacion,
+        evaluacionMaximo: evaluations?.puntajeMaximo,
+        evaluacionRegistros: evaluacion.evaluaciones,
+        evaluacionPeriodo: evaluations?.periodo,
+      }),
       nombre: includesSurnames ? nombres : [nombres, apellidos].filter(Boolean).join(' '),
       nombres: cleanNombres,
       apellidos,

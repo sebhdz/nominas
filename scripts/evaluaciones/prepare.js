@@ -187,6 +187,7 @@ export function prepareEvaluationRows(rows, source) {
   return {
     version: 1,
     identificadorInstitucion: source.identificadorInstitucion,
+    periodo: source.periodo,
     puntajeMaximo: 40,
     fuente: {
       archivo: source.archivo,

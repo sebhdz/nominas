@@ -5,9 +5,8 @@ import {
   resetPerception,
   setupPerceptionListeners,
   startBackgroundVerification,
-  fetchBatchOpinions,
 } from "./votes.js";
-import { getProfessorKey } from "../lib/professor-key.js";
+import { evaluationSummary } from "../lib/evaluation.js";
 
 const $ = (selector) => document.querySelector(selector);
 const search = $("#search");
@@ -136,78 +135,8 @@ function updatePagination() {
   $("#next-page").disabled = page >= pages;
 }
 
-let tableRenderGeneration = 0;
-
-function createThumbSvg(isDown = false) {
-  if (
-    typeof document !== "undefined" &&
-    typeof document.createElementNS === "function"
-  ) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute(
-      "class",
-      `row-acceptance-icon${isDown ? " row-acceptance-icon-down" : ""}`,
-    );
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("stroke-linejoin", "round");
-    svg.setAttribute("aria-hidden", "true");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute(
-      "d",
-      "M7 10v10H3V10zM7 10l5-7a2 2 0 0 1 2 2l-1 5h6a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7",
-    );
-    svg.append(path);
-    return svg;
-  }
-  const span = element(
-    "span",
-    `row-acceptance-icon${isDown ? " row-acceptance-icon-down" : ""}`,
-  );
-  span.textContent = isDown ? "👎" : "👍";
-  return span;
-}
-
-function renderRowAcceptance(container, stats) {
-  if (!container || !stats || !stats.total_recommendations) return;
-
-  const total = stats.total_recommendations;
-  const yes = stats.recommends_yes || 0;
-  const pctYes = Math.round((yes / total) * 100);
-  const pctNo = 100 - pctYes;
-
-  container.replaceChildren();
-
-  const track = element("div", "row-acceptance-track");
-  track.setAttribute(
-    "title",
-    `${pctYes}% lo recomienda (${total} ${total === 1 ? "opinión" : "opiniones"})`,
-  );
-  track.setAttribute("role", "progressbar");
-  track.setAttribute("aria-valuenow", String(pctYes));
-  track.setAttribute("aria-valuemin", "0");
-  track.setAttribute("aria-valuemax", "100");
-  track.setAttribute("aria-label", `${pctYes}% de recomendación`);
-
-  const segYes = element("div", "row-acceptance-seg row-acceptance-seg-yes");
-  segYes.style.width = `${pctYes}%`;
-  const segNo = element("div", "row-acceptance-seg row-acceptance-seg-no");
-  segNo.style.width = `${pctNo}%`;
-  track.append(segYes, segNo);
-
-  const label = element("span", "row-acceptance-pct", `${pctYes}%`);
-
-  container.append(createThumbSvg(false), track, createThumbSvg(true), label);
-}
-
 // Both datasets use the same row structure and responsive styles.
 function renderTableResults(target, pension = false) {
-  tableRenderGeneration += 1;
-  const currentRender = tableRenderGeneration;
-
   target.replaceChildren();
   updatePagination();
   const offset = (page - 1) * PAGE_SIZE;
@@ -223,7 +152,6 @@ function renderTableResults(target, pension = false) {
     row.append(empty);
     target.append(row);
   }
-  const rowContainers = [];
   for (const person of shown) {
     const row = element("tr");
     const nameCell = element("td", "name-cell");
@@ -242,12 +170,16 @@ function renderTableResults(target, pension = false) {
       name.addEventListener("click", () => openPerson(person, name));
     }
     nameCell.append(name);
-    if (!pension && university?.id) {
-      const profKey = getProfessorKey(university.id, person.nombre);
-      const acceptanceEl = element("div", "row-acceptance");
-      acceptanceEl.dataset.profKey = profKey;
-      nameCell.append(acceptanceEl);
-      rowContainers.push({ key: profKey, el: acceptanceEl });
+    const evaluation = !pension && evaluationSummary(person);
+    if (evaluation) {
+      const summary = element("div", "row-evaluation");
+      summary.append(
+        element("span", "row-evaluation-label", "Evaluación institucional"),
+        element("strong", "row-evaluation-score", evaluation.equivalent),
+        element("span", "row-evaluation-original", `${evaluation.original} · escala original`),
+        element("span", "row-evaluation-context", evaluation.context),
+      );
+      nameCell.append(summary);
     }
     const role = element(
       "td",
@@ -292,21 +224,6 @@ function renderTableResults(target, pension = false) {
   }
   status.textContent = `Mostrando ${shown.length ? offset + 1 : 0}–${offset + shown.length} de ${matches.length.toLocaleString("es-MX")} registros`;
   target.setAttribute("aria-busy", "false");
-
-  if (rowContainers.length > 0) {
-    const keys = rowContainers.map((r) => r.key);
-    fetchBatchOpinions(keys)
-      .then((results) => {
-        if (currentRender !== tableRenderGeneration) return;
-        if (!results || typeof results !== "object") return;
-        for (const { key, el } of rowContainers) {
-          if (key && results[key]) {
-            renderRowAcceptance(el, results[key]);
-          }
-        }
-      })
-      .catch(() => {});
-  }
 }
 
 function renderResults() {
@@ -476,25 +393,21 @@ function openPerson(person, trigger = search, updateURL = true) {
     `Actualización en la fuente: ${formatDate(person.actualizacion)}`;
   const evaluation = $("#person-evaluation");
   if (evaluation) {
-    const hasEvaluation = Number.isFinite(person.evaluacion);
-    if (hasEvaluation) {
-      const label = element(
-        "span",
-        "salary-summary-title",
-        "Resultado de evaluación de desempeño 2026-01: ",
+    const summary = evaluationSummary(person);
+    evaluation.replaceChildren();
+    if (summary) {
+      const method = element("a", "evaluation-method", "Cómo presentamos esta evaluación");
+      method.href = "/metodologia/#evaluaciones";
+      evaluation.append(
+        element("h3", "salary-summary-title", "EVALUACIÓN INSTITUCIONAL"),
+        element("strong", "evaluation-score", summary.equivalent),
+        element("span", "evaluation-original", `${summary.original} · escala original`),
+        element("p", "evaluation-context", summary.context),
+        element("p", "evaluation-note", "Equivalencia sobre 10 calculada por este sitio a partir de la escala original."),
+        method,
       );
-      const score = element(
-        "strong",
-        "evaluation-score",
-        `${person.evaluacion} de 40 puntos`,
-      );
-      evaluation.textContent = `Resultado de evaluación de desempeño 2026-01: ${person.evaluacion} de 40 puntos`;
-      evaluation.replaceChildren(label, score);
-    } else {
-      evaluation.textContent = "";
-      evaluation.replaceChildren();
     }
-    evaluation.hidden = !hasEvaluation;
+    evaluation.hidden = !summary;
   }
   $("#share-status").textContent = "";
   if (updateURL) {
@@ -793,6 +706,10 @@ async function loadData() {
     people = await response.json();
     if (!Array.isArray(people) || !people.length)
       throw new Error("Archivo vacío");
+    const hasEvaluations = people.some(person => evaluationSummary(person));
+    $("#profile-notice-text").textContent = hasEvaluations
+      ? "Toca un nombre para opinar sobre tu profe y consultar su evaluación institucional, cuando esté disponible."
+      : "Toca un nombre para abrir su ficha y opinar sobre tu profe.";
     if (university.pensionUrl) {
       try {
         const pensionResponse = await fetch(university.pensionUrl);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { prepareEvaluationRows } from '../scripts/evaluaciones/prepare.js';
@@ -94,7 +94,7 @@ test('calculates average score rounded to two decimals when a person appears mul
   ]);
 });
 
-test('prepareUaaEvaluations writes processed JSON and deletes the original raw XLSX file', async (t) => {
+test('prepareUaaEvaluations writes processed JSON and preserves the original raw XLSX file', async (t) => {
   const root = await mkdtemp(path.join(tmpdir(), 'eval-pipeline-'));
   t.after(() => rm(root, { recursive: true, force: true }));
 
@@ -121,7 +121,8 @@ test('prepareUaaEvaluations writes processed JSON and deletes the original raw X
   const saved = JSON.parse(await readFile(path.join(root, 'data/evaluations/processed/uaa.json'), 'utf8'));
   assert.deepEqual(saved, result);
 
-  await assert.rejects(access(rawFile), { code: 'ENOENT' });
+  assert.deepEqual(await readFile(rawFile), xlsx);
+  assert.equal(saved.periodo, '2026-01');
 });
 
 test('processed UAA evaluations JSON is retained without raw XLSX and links into UAA search dataset', async () => {
@@ -130,7 +131,6 @@ test('processed UAA evaluations JSON is retained without raw XLSX and links into
 
   assert.equal(processed.totalPersonas, 1941);
   assert.equal(processed.filasEntrada, 2079);
-  await assert.rejects(access(path.resolve('data/evaluations/raw/Evaluacion_Docentes_UAA.xlsx')), { code: 'ENOENT' });
 
   const uaaDataset = await getSearchDataset('uaa', '2026');
   const withEval = uaaDataset.filter((person) => Number.isFinite(person.evaluacion));

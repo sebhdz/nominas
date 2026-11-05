@@ -89,15 +89,6 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .person-link, .person-name { display: block; text-align: left; font-family: inherit; font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--ink); background: transparent; border: 0; padding: 3px 0; text-decoration: none; }
 .name-line { display: block; }
 .person-link:hover { text-decoration: underline; text-underline-offset: 4px; }
-.row-acceptance { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 11px; font-weight: 600; color: #625c52; }
-.row-acceptance:empty { display: none; }
-.row-acceptance-icon { width: 13px; height: 13px; flex-shrink: 0; stroke: var(--ink); }
-.row-acceptance-icon-down { transform: rotate(180deg); }
-.row-acceptance-track { display: flex; width: 44px; height: 6px; background: var(--divider); border: 1px solid var(--ink); overflow: hidden; }
-.row-acceptance-seg { height: 100%; }
-.row-acceptance-seg-yes { background: #16a34a; }
-.row-acceptance-seg-no { background: #dc2626; }
-.row-acceptance-pct { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); margin-left: 2px; }
 .role-cell, .area-cell { font-size: 14px; font-weight: 700; color: #625c52; text-align: center; }
 .payroll-table th:nth-child(2), .payroll-table th:nth-child(3) { text-align: center; }
 .payroll-table .salary-cell { background: var(--accent); text-align: right; white-space: nowrap; overflow-wrap: normal; }
@@ -163,8 +154,8 @@ dialog::backdrop { background: #242321bb; }
 .benefit-amounts strong { display: block; font: 700 18px/1.3 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; }
 .benefit-amounts small { display: block; margin-top: 3px; font-size: 11px; }
 .person-evaluation { margin: 20px 0 0; padding: 12px 14px; border: 2px solid var(--ink); background: var(--accent); }
-.person-evaluation .salary-summary-title { display: block; }
-.evaluation-score { display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 27px; font-weight: 700; line-height: 1.2; margin-top: 6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.person-evaluation .salary-summary-title { display: block; margin: 0; font-size: 11px; }
+.evaluation-score { display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 36px; font-weight: 700; line-height: 1.1; margin-top: 3px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .opinions-section { margin-top: 20px; padding-top: 14px; border-top: 2px solid var(--ink); }
 .opinions-title { margin-bottom: 6px; color: var(--accent-ink); }
 .recommend-card { margin-top: 12px; padding: 0 0 12px; border-top: 0; }
@@ -223,8 +214,6 @@ body:has(dialog[open]) { overflow: hidden; }
   .payroll-table { min-width: 840px; }
 }
 @media (max-width: 700px) {
-  .opinion-notice { padding: 10px 12px; }
-  .opinion-notice strong { font-size: 22px; }
   .table-scroll { --mobile-salary-width: clamp(118px, 35%, 170px); overflow-x: visible; }
   .filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .quick-filters { grid-column: 1 / -1; }
@@ -278,7 +267,7 @@ body:has(dialog[open]) { overflow: hidden; }
   .benefits-heading { font-size: 22px; }
   #benefits-list li { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .benefit-amounts { text-align: left; }
-  .salaries strong, .evaluation-score { font-size: clamp(17px, 5vw, 24px); }
+  .salaries strong { font-size: clamp(17px, 5vw, 24px); }
   .recommend-header, .perception-header { flex-direction: column; align-items: flex-start; gap: 6px; }
   .recommend-actions { grid-template-columns: 1fr; gap: 6px; }
   .perception-actions { gap: 6px; }
@@ -292,3 +281,20 @@ body:has(dialog[open]) { overflow: hidden; }
 @keyframes verification-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .verification-spinner { animation: none; } }
 .recommend-btn:disabled, .perception-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Published evaluations and visitor opinions are separate sources. */
+.row-evaluation { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin-top: 5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.2; text-align: left; }
+.row-evaluation-label, .row-evaluation-context { flex-basis: 100%; font-size: 10px; line-height: 1.25; color: #625c52; }
+.row-evaluation-score { font-size: 18px; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.row-evaluation-original { font-size: 10px; }
+.evaluation-original { display: block; margin-top: 1px; font-size: 12px; font-weight: 700; line-height: 1.3; }
+.evaluation-context { margin: 5px 0 0; font-size: 11px; font-weight: 700; line-height: 1.3; }
+.evaluation-note, .evaluation-method { font-size: 11px; line-height: 1.35; }
+.evaluation-note { margin: 3px 0; }
+@media (max-width: 560px) {
+  .opinion-notice { padding: 10px 12px; }
+  .opinion-notice strong { font-size: 22px; }
+  .row-evaluation { gap: 0 6px; }
+  .row-evaluation-score { font-size: 16px; }
+  .person-evaluation .evaluation-score { font-size: 30px; }
+}

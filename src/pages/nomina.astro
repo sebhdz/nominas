@@ -38,9 +38,9 @@ import RecordsTable from "../components/RecordsTable.astro";
       </div>
     </section>
     <section id="payroll-panel" class="browse" role="tabpanel" aria-labelledby="payroll-tab" aria-label="Nómina">
-      <aside class="opinion-notice" aria-label="Cómo opinar sobre tu profesor">
-        <strong>Ahora te toca opinar.</strong>
-        <p>Toca un nombre para abrir su ficha y opinar sobre tu profe.</p>
+      <aside class="opinion-notice" aria-label="Consulta y participación">
+        <strong id="profile-notice-title">Ahora te toca opinar.</strong>
+        <p id="profile-notice-text">Toca un nombre para abrir su ficha y opinar sobre tu profe.</p>
       </aside>
       <p id="payroll-sort-note" class="sort-note">Ordenado por sueldo bruto, de mayor a menor · MXN</p>
       <RecordsTable bodyId="results" regionLabel="Sueldos de profesores y funcionarios" caption="Sueldos mensuales de profesores y funcionarios. Selecciona un nombre para ver su ficha." columns={['Nombre', 'Puesto', 'Área / departamento', 'Sueldo mensual']} mobileAmountLabel="Sueldo mensual" />
@@ -64,6 +64,7 @@ import RecordsTable from "../components/RecordsTable.astro";
         <div class="salaries"><div><span class="salary-label">BRUTO</span><strong id="person-gross"></strong></div><div><span class="salary-label">NETO</span><strong id="person-net"></strong></div></div>
         <div class="salary-meta"><p id="person-period" class="person-period"></p></div>
       </section>
+      <section id="person-evaluation" class="person-evaluation" aria-label="Evaluación institucional" hidden></section>
       <details id="person-benefits" class="person-benefits" hidden>
         <summary>
           <span class="benefits-heading">Percepciones y prestaciones</span>
@@ -75,7 +76,6 @@ import RecordsTable from "../components/RecordsTable.astro";
         <button id="benefits-retry" class="text-button" type="button" hidden>Reintentar</button>
         <ul id="benefits-list"></ul>
       </details>
-      <p id="person-evaluation" class="person-evaluation" hidden></p>
       <section class="opinions-section" aria-label="Opiniones de visitantes">
         <p class="opinions-title">OPINIONES DE VISITANTES ACUMULADAS</p>
         <p class="opinion-context">Participación abierta de visitantes; no es una encuesta representativa.</p>

@@ -43,7 +43,7 @@ The current teacher filter matches source position descriptions beginning with P
 
 ## Payroll details
 
-Payroll details keep identity and monthly remuneration above accumulated visitor opinions. Additional perceptions and benefits live in a closed native details section between remuneration and opinions. Load their static data only when expanded. Use a vertical list on mobile, retaining the source concept, category, reported periodicity and available gross/net amounts without a combined total.
+Payroll details keep identity and monthly remuneration above institutional evaluations, when available, and accumulated visitor opinions. Evaluation equivalents out of 10 have priority in a mustard section, with the original scale, averaging context and reporting period underneath. The table shows institutional evaluations below the name instead of visitor recommendation bars; institutions without matched evaluations keep the regular name and pay presentation. Additional perceptions and benefits live in a closed native details section between remuneration and opinions. Load their static data only when expanded. Use a vertical list on mobile, retaining the source concept, category, reported periodicity and available gross/net amounts without a combined total.
 
 ## Footer
 

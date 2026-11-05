@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prepareEvaluationsFromXlsx } from './prepare.js';
@@ -12,6 +12,7 @@ export async function prepareUaaEvaluations(root = projectRoot) {
   const bytes = await readFile(sourcePath);
   const processed = prepareEvaluationsFromXlsx(bytes, {
     identificadorInstitucion: 'uaa',
+    periodo: '2026-01',
     archivo: relativeSource,
     sha256: createHash('sha256').update(bytes).digest('hex'),
   });
@@ -19,7 +20,6 @@ export async function prepareUaaEvaluations(root = projectRoot) {
   await mkdir(outputDirectory, { recursive: true });
   const outputPath = path.join(outputDirectory, 'uaa.json');
   await writeFile(outputPath, `${JSON.stringify(processed, null, 2)}\n`, 'utf8');
-  await unlink(sourcePath);
   return processed;
 }
 
