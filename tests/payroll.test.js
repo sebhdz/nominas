@@ -104,3 +104,38 @@ test('benefit blocks and search links agree across boundaries and omit nonmoneta
   assert.deepEqual(data, before);
   assert.notEqual(toBenefitBlocks({ ...data, fuente: { sha256: 'another-source' } })[0].url, blocks[0].url);
 });
+
+test('attaches evaluation score only to matching people and omits it when absent', () => {
+  const data = dataset({
+    registros: [
+      {
+        origen: { fila: 1 },
+        nombre: { nombres: 'MA. DEL CARMEN', primerApellido: 'SANCHEZ', segundoApellido: 'DE LA CRUZ' },
+        puesto: 'PROFESOR', cargo: null, area: 'EXTENSION ACADEMICA',
+        periodo: { inicio: '2026-04-01', fin: '2026-06-30' },
+        remuneracionMensual: { bruto: 15000, neto: 12000 }, actualizacionFuente: '2026-07-02',
+      },
+      {
+        origen: { fila: 2 },
+        nombre: { nombres: 'PERSONA SIN', primerApellido: 'EVALUACION', segundoApellido: null },
+        puesto: 'ADMINISTRATIVO', cargo: null, area: 'FINANZAS',
+        periodo: { inicio: '2026-04-01', fin: '2026-06-30' },
+        remuneracionMensual: { bruto: 10000, neto: 8000 }, actualizacionFuente: '2026-07-02',
+      },
+    ],
+  });
+  const evaluations = {
+    registros: [
+      {
+        nombre: 'SANCHEZ DE LA CRUZ MA. DEL CARMEN',
+        nombreNormalizado: 'SANCHEZ DE LA CRUZ MA. DEL CARMEN',
+        calificacion: 34.67,
+        evaluaciones: 1,
+      },
+    ],
+  };
+
+  const people = toSearchPeople(data, evaluations);
+  assert.equal(people[0].evaluacion, 34.67);
+  assert.equal('evaluacion' in people[1], false);
+});

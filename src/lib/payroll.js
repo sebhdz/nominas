@@ -1,10 +1,29 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { readPreparedJson } from './prepared-json.js';
 
 // Astro bundles this module before prerendering, so import.meta.url no longer
 // points to src/lib. Builds run from the project root, as documented.
 const processedRoot = path.resolve('data/processed');
+const evaluationsRoot = path.resolve('data/evaluations/processed');
+
+const normalizeName = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+export async function readEvaluations(id, root = evaluationsRoot) {
+  const file = path.join(root, `${id}.json`);
+  try {
+    return JSON.parse(await readFile(file, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
 
 export async function readPayroll(file) {
   const data = await readPreparedJson(file);
@@ -71,10 +90,16 @@ export function toBenefitBlocks(data) {
   return [...blocks.values()];
 }
 
-export function toSearchPeople(data) {
+export function toSearchPeople(data, evaluations = null) {
   const benefitUrls = new Map(toBenefitBlocks(data).flatMap(block =>
     Object.keys(block.records).map(id => [id, block.url])
   ));
+  const evaluationList = Array.isArray(evaluations) ? evaluations : (evaluations?.registros ?? []);
+  const evaluationScores = new Map(
+    evaluationList
+      .filter(entry => entry && Number.isFinite(entry.calificacion))
+      .map(entry => [normalizeName(entry.nombreNormalizado || entry.nombre), entry.calificacion])
+  );
   return data.registros.map((record) => {
     const nombres = record.nombre.nombres || '';
     const apellidos = [record.nombre.primerApellido, record.nombre.segundoApellido].filter(Boolean).join(' ');
@@ -82,13 +107,18 @@ export function toSearchPeople(data) {
     const surnameWords = apellidos.split(/\s+/);
     const includesSurnames = Boolean(apellidos) && givenWords.length > surnameWords.length &&
       givenWords.slice(-surnameWords.length).join(' ').toUpperCase() === surnameWords.join(' ').toUpperCase();
+    const cleanNombres = includesSurnames ? givenWords.slice(0, -surnameWords.length).join(' ') : nombres;
+    const surnamesFirstKey = normalizeName([apellidos, cleanNombres].filter(Boolean).join(' '));
+    const namesFirstKey = normalizeName([cleanNombres, apellidos].filter(Boolean).join(' '));
+    const evaluacion = evaluationScores.get(surnamesFirstKey) ?? evaluationScores.get(namesFirstKey);
     return {
       // This identifies a source row, not a person across periods. Changing the
       // input invalidates old row links rather than pointing to another person.
       id: recordId(data, record),
       ...(benefitUrls.has(recordId(data, record)) && { prestacionesUrl: benefitUrls.get(recordId(data, record)) }),
+      ...(Number.isFinite(evaluacion) && { evaluacion }),
       nombre: includesSurnames ? nombres : [nombres, apellidos].filter(Boolean).join(' '),
-      nombres: includesSurnames ? givenWords.slice(0, -surnameWords.length).join(' ') : nombres,
+      nombres: cleanNombres,
       apellidos,
       puesto: record.cargo ?? record.puesto,
       puesto_base: record.puesto,
@@ -105,6 +135,9 @@ export async function getBenefitBlocks(id, year) {
 }
 
 export async function getSearchDataset(id, year) {
-  const data = await readPayroll(path.join(processedRoot, id, year, 'nomina.json'));
-  return toSearchPeople(data);
+  const [data, evaluations] = await Promise.all([
+    readPayroll(path.join(processedRoot, id, year, 'nomina.json')),
+    readEvaluations(id),
+  ]);
+  return toSearchPeople(data, evaluations);
 }

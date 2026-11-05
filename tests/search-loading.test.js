@@ -1,11 +1,11 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { setImmediate } from 'node:timers/promises';
+import test from "node:test";
+import assert from "node:assert/strict";
+import { setImmediate } from "node:timers/promises";
 
 // Solo simula los controles que usa el buscador; no requiere un navegador ni dependencias.
 class Control {
-  value = '';
-  textContent = '';
+  value = "";
+  textContent = "";
   children = [];
   attributes = {};
   listeners = {};
@@ -15,143 +15,296 @@ class Control {
   open = false;
   hidden = false;
   isConnected = true;
-  append(...children) { this.children.push(...children); }
-  replaceChildren(...children) { this.children = children; }
-  setAttribute(name, value) { this.attributes[name] = value; }
-  addEventListener(name, handler) { this.listeners[name] = handler; }
-  dispatch(name, event = {}) { return this.listeners[name]({ preventDefault() {}, key: '', ...event }); }
-  showModal() { this.open = true; }
-  close() { this.open = false; this.listeners.close?.({}); }
+  append(...children) {
+    this.children.push(...children);
+  }
+  replaceChildren(...children) {
+    this.children = children;
+  }
+  setAttribute(name, value) {
+    this.attributes[name] = value;
+  }
+  addEventListener(name, handler) {
+    this.listeners[name] = handler;
+  }
+  dispatch(name, event = {}) {
+    return this.listeners[name]({ preventDefault() {}, key: "", ...event });
+  }
+  showModal() {
+    this.open = true;
+  }
+  close() {
+    this.open = false;
+    this.listeners.close?.({});
+  }
   focus() {}
   scrollIntoView() {}
-  getBoundingClientRect() { return { left: 0, right: 100, top: 0, bottom: 100 }; }
-  get firstElementChild() { return this.children[0]; }
+  getBoundingClientRect() {
+    return { left: 0, right: 100, top: 0, bottom: 100 };
+  }
+  get firstElementChild() {
+    return this.children[0];
+  }
 }
 
-test('conserva búsqueda, filtros y enlace si se editan antes de terminar la descarga', async t => {
+test("conserva búsqueda, filtros y enlace si se editan antes de terminar la descarga", async (t) => {
   const controls = new Map();
-  const control = selector => {
+  const control = (selector) => {
     if (!controls.has(selector)) controls.set(selector, new Control());
     return controls.get(selector);
   };
-  const groups = ['all', 'professors', 'others'].map(group => Object.assign(new Control(), { dataset: { group } }));
-  const globals = ['document', 'window', 'location', 'history', 'fetch'];
-  const previous = globals.map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
+  const groups = ["all", "professors", "others"].map((group) =>
+    Object.assign(new Control(), { dataset: { group } }),
+  );
+  const globals = ["document", "window", "location", "history", "fetch"];
+  const previous = globals.map((name) => [
+    name,
+    Object.getOwnPropertyDescriptor(globalThis, name),
+  ]);
   t.after(() => {
     for (const [name, descriptor] of previous) {
       if (descriptor) Object.defineProperty(globalThis, name, descriptor);
       else delete globalThis[name];
     }
   });
-  const location = { href: 'http://localhost/nomina/?university=prueba&q=Delia&area=COMUNICACION&orden=menor&persona=1' };
+  const location = {
+    href: "http://localhost/nomina/?university=prueba&q=Delia&area=COMUNICACION&orden=menor&persona=1",
+  };
   const requests = [];
   let finishDownload;
-  const downloaded = new Promise(resolve => { finishDownload = resolve; });
+  const downloaded = new Promise((resolve) => {
+    finishDownload = resolve;
+  });
   Object.assign(globalThis, {
-    document: { querySelector: control, querySelectorAll: () => groups, createElement: () => new Control() },
+    document: {
+      querySelector: control,
+      querySelectorAll: () => groups,
+      createElement: () => new Control(),
+    },
     window: { addEventListener() {} },
     location,
     history: {
-      replaceState(_state, _title, url) { location.href = String(url); },
-      pushState(_state, _title, url) { location.href = String(url); },
+      replaceState(_state, _title, url) {
+        location.href = String(url);
+      },
+      pushState(_state, _title, url) {
+        location.href = String(url);
+      },
     },
     fetch: async (url) => {
       requests.push(url);
       await downloaded;
-      if (url === '/data/universities.json') return { ok: true, json: async () => [
-        { id: 'prueba', name: 'Universidad de prueba', period: { inicio: '2026-04-01', fin: '2026-06-30' }, updates: ['2026-07-02'], url: '/data/prueba/2026.json', pensionUrl: '/data/pensions/prueba.json' },
-        { id: 'otra', url: '/data/otra/2026.json', pensionUrl: null },
-        { id: 'vacia', url: '/data/vacia/2026.json', pensionUrl: '/data/pensions/vacia.json' },
-      ] };
-      if (url === '/data/pensions/vacia.json') return { ok: true, json: async () => ({ records: [] }) };
-      if (url === '/data/pensions/prueba.json') return { ok: true, json: async () => ({
-        records: [
-          { id: 'p1', nombre: 'ANDRES GURROLA', nombres: 'ANDRES', apellidos: 'GURROLA', area: 'COMUNICACION', tipo: 'Años de Servicio', estatus: 'Jubilado(a)', monto: 1500, periodicidad: 'Quincenal' },
-          { id: 'p2', nombre: 'DELIA ALMEIDA', nombres: 'DELIA', apellidos: 'ALMEIDA', area: 'FINANZAS', tipo: 'Viudez', estatus: 'Pensionado(a)', monto: 800, periodicidad: 'Mensual' },
+      if (url === "/data/universities.json")
+        return {
+          ok: true,
+          json: async () => [
+            {
+              id: "prueba",
+              name: "Universidad de prueba",
+              period: { inicio: "2026-04-01", fin: "2026-06-30" },
+              updates: ["2026-07-02"],
+              url: "/data/prueba/2026.json",
+              pensionUrl: "/data/pensions/prueba.json",
+            },
+            { id: "otra", url: "/data/otra/2026.json", pensionUrl: null },
+            {
+              id: "vacia",
+              url: "/data/vacia/2026.json",
+              pensionUrl: "/data/pensions/vacia.json",
+            },
+          ],
+        };
+      if (url === "/data/pensions/vacia.json")
+        return { ok: true, json: async () => ({ records: [] }) };
+      if (url === "/data/pensions/prueba.json")
+        return {
+          ok: true,
+          json: async () => ({
+            records: [
+              {
+                id: "p1",
+                nombre: "ANDRES GURROLA",
+                nombres: "ANDRES",
+                apellidos: "GURROLA",
+                area: "COMUNICACION",
+                tipo: "Años de Servicio",
+                estatus: "Jubilado(a)",
+                monto: 1500,
+                periodicidad: "Quincenal",
+              },
+              {
+                id: "p2",
+                nombre: "DELIA ALMEIDA",
+                nombres: "DELIA",
+                apellidos: "ALMEIDA",
+                area: "FINANZAS",
+                tipo: "Viudez",
+                estatus: "Pensionado(a)",
+                monto: 800,
+                periodicidad: "Mensual",
+              },
+            ],
+          }),
+        };
+      return {
+        ok: true,
+        json: async () => [
+          {
+            id: 1,
+            nombre: "DELIA ALMEIDA",
+            nombres: "DELIA",
+            apellidos: "ALMEIDA",
+            puesto: "JEFA",
+            area: "COMUNICACION",
+            bruto: 200,
+            neto: 100,
+            evaluacion: 36.27,
+          },
+          {
+            id: 2,
+            nombre: "ANDRES GURROLA",
+            nombres: "ANDRES",
+            apellidos: "GURROLA",
+            puesto: "DISEÑADOR",
+            area: "COMUNICACION",
+            bruto: 300,
+            neto: 200,
+            actualizacion: "2026-07-02",
+          },
         ],
-      }) };
-      return { ok: true, json: async () => [
-        { id: 1, nombre: 'DELIA ALMEIDA', nombres: 'DELIA', apellidos: 'ALMEIDA', puesto: 'JEFA', area: 'COMUNICACION', bruto: 200, neto: 100 },
-        { id: 2, nombre: 'ANDRES GURROLA', nombres: 'ANDRES', apellidos: 'GURROLA', puesto: 'DISEÑADOR', area: 'COMUNICACION', bruto: 300, neto: 200, actualizacion: '2026-07-02' },
-      ] };
+      };
     },
   });
-  await import('../src/scripts/search.js');
-  assert.equal(control('#search').value, 'Delia');
-  assert.equal(control('#order').value, 'asc');
+  await import("../src/scripts/search.js");
+  assert.equal(control("#search").value, "Delia");
+  assert.equal(control("#order").value, "asc");
 
-  control('#search').value = 'Andres';
-  control('#search').dispatch('input');
-  control('#order').value = 'desc';
-  control('#order').dispatch('change');
-  groups[2].dispatch('click');
+  control("#search").value = "Andres";
+  control("#search").dispatch("input");
+  control("#order").value = "desc";
+  control("#order").dispatch("change");
+  groups[2].dispatch("click");
   finishDownload();
   await setImmediate();
 
-  assert.equal(control('#search').value, 'Andres');
-  assert.equal(control('#order').value, 'desc');
-  assert.equal(control('#area').value, 'COMUNICACION');
-  assert.equal(groups[2].attributes['aria-pressed'], 'true');
-  assert.equal(control('#results').children.length, 1);
-  assert.equal(control('#results').children[0].children[0].children[0].title, 'Andres Gurrola');
+  assert.equal(control("#search").value, "Andres");
+  assert.equal(control("#order").value, "desc");
+  assert.equal(control("#area").value, "COMUNICACION");
+  assert.equal(groups[2].attributes["aria-pressed"], "true");
+  assert.equal(control("#results").children.length, 1);
+  assert.equal(
+    control("#results").children[0].children[0].children[0].title,
+    "Andres Gurrola",
+  );
   const url = new URL(location.href);
-  assert.equal(url.searchParams.get('q'), 'Andres');
-  assert.equal(url.searchParams.get('area'), 'COMUNICACION');
-  assert.equal(url.searchParams.get('grupo'), 'others');
-  assert.equal(url.searchParams.has('persona'), false);
-  assert.equal(url.searchParams.has('orden'), false);
-  assert.equal(url.searchParams.get('university'), 'prueba');
-  assert.deepEqual(requests.filter(url => typeof url === 'string' && url.startsWith('/data/')), ['/data/universities.json', '/data/prueba/2026.json', '/data/pensions/prueba.json']);
-  assert.equal(control('#university-name').textContent, 'Nómina Universidad de prueba');
-  assert.equal(control('#pensions-tab').hidden, false);
-  control('#results').children[0].children[0].children[0].dispatch('click');
-  assert.equal(new URL(location.href).searchParams.get('university'), 'prueba');
-  assert.equal(new URL(location.href).searchParams.get('persona'), '2');
-  assert.match(control('#person-period').textContent, /Periodo informado: 1 de abril de 2026/);
-  assert.match(control('#person-source-date').textContent, /2 de julio de 2026/);
-  control('#pensions-tab').dispatch('click');
-  assert.equal(control('#pensions-panel').hidden, false);
-  assert.equal(control('#search').value, 'Andres');
-  assert.equal(control('#area').value, 'COMUNICACION');
-  assert.equal(new URL(location.href).searchParams.get('tab'), 'pensiones');
-  assert.equal(control('#pension-results').children.length, 1);
-  const pensionRow = control('#pension-results').children[0];
+  assert.equal(url.searchParams.get("q"), "Andres");
+  assert.equal(url.searchParams.get("area"), "COMUNICACION");
+  assert.equal(url.searchParams.get("grupo"), "others");
+  assert.equal(url.searchParams.has("persona"), false);
+  assert.equal(url.searchParams.has("orden"), false);
+  assert.equal(url.searchParams.get("university"), "prueba");
+  assert.deepEqual(
+    requests.filter(
+      (url) => typeof url === "string" && url.startsWith("/data/"),
+    ),
+    [
+      "/data/universities.json",
+      "/data/prueba/2026.json",
+      "/data/pensions/prueba.json",
+    ],
+  );
+  assert.equal(
+    control("#university-name").textContent,
+    "Nómina Universidad de prueba",
+  );
+  assert.equal(control("#pensions-tab").hidden, false);
+  control("#results").children[0].children[0].children[0].dispatch("click");
+  assert.equal(new URL(location.href).searchParams.get("university"), "prueba");
+  assert.equal(new URL(location.href).searchParams.get("persona"), "2");
+  assert.match(
+    control("#person-period").textContent,
+    /Periodo informado: 1 de abril de 2026/,
+  );
+  assert.match(
+    control("#person-source-date").textContent,
+    /2 de julio de 2026/,
+  );
+  assert.equal(control("#person-evaluation").hidden, true);
+  assert.equal(control("#person-evaluation").textContent, "");
+  control("#search").value = "Delia";
+  control("#search").dispatch("input");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  control("#results").children[0].children[0].children[0].dispatch("click");
+  assert.equal(control("#person-evaluation").hidden, false);
+  assert.equal(
+    control("#person-evaluation").textContent,
+    "Resultado de evaluación de desempeño 2026-01: 36.27 de 40 puntos",
+  );
+  control("#search").value = "Andres";
+  control("#search").dispatch("input");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  control("#pensions-tab").dispatch("click");
+  assert.equal(control("#pensions-panel").hidden, false);
+  assert.equal(control("#search").value, "Andres");
+  assert.equal(control("#area").value, "COMUNICACION");
+  assert.equal(new URL(location.href).searchParams.get("tab"), "pensiones");
+  assert.equal(control("#pension-results").children.length, 1);
+  const pensionRow = control("#pension-results").children[0];
   assert.equal(pensionRow.children.length, 4);
   const pensionName = pensionRow.children[0].children[0];
-  assert.equal(pensionName.children[0].textContent, 'Andres');
-  assert.equal(pensionName.children[1].textContent, 'Gurrola');
-  assert.equal(pensionName.listeners.click, undefined, 'pension names do not open payroll voting');
-  assert.equal(pensionRow.children[3].children.length, 2, 'pensions do not invent a net amount');
-  assert.match(control('#pension-results').children[0].children[3].children[1].textContent, /Quincenal/);
-  assert.equal(control('#pension-results').children[0].children[1].children.length, 1);
+  assert.equal(pensionName.children[0].textContent, "Andres");
+  assert.equal(pensionName.children[1].textContent, "Gurrola");
+  assert.equal(
+    pensionName.listeners.click,
+    undefined,
+    "pension names do not open payroll voting",
+  );
+  assert.equal(
+    pensionRow.children[3].children.length,
+    2,
+    "pensions do not invent a net amount",
+  );
+  assert.match(
+    control("#pension-results").children[0].children[3].children[1].textContent,
+    /Quincenal/,
+  );
+  assert.equal(
+    control("#pension-results").children[0].children[1].children.length,
+    1,
+  );
 
-  location.href = 'http://localhost/nomina/?university=otra&tab=pensiones';
+  location.href = "http://localhost/nomina/?university=otra&tab=pensiones";
   requests.length = 0;
   finishDownload();
-  await import('../src/scripts/search.js?no-pension-data');
+  await import("../src/scripts/search.js?no-pension-data");
   await setImmediate();
-  assert.deepEqual(requests.filter(url => typeof url === 'string' && url.startsWith('/data/')), ['/data/universities.json', '/data/otra/2026.json']);
-  assert.equal(control('#pensions-tab').disabled, true);
-  assert.equal(control('#pensions-tab').hidden, true);
-  assert.equal(control('#pensions-tab').attributes['aria-selected'], 'false');
-  assert.equal(control('#pensions-panel').hidden, true);
-  assert.equal(new URL(location.href).searchParams.has('tab'), false);
+  assert.deepEqual(
+    requests.filter(
+      (url) => typeof url === "string" && url.startsWith("/data/"),
+    ),
+    ["/data/universities.json", "/data/otra/2026.json"],
+  );
+  assert.equal(control("#pensions-tab").disabled, true);
+  assert.equal(control("#pensions-tab").hidden, true);
+  assert.equal(control("#pensions-tab").attributes["aria-selected"], "false");
+  assert.equal(control("#pensions-panel").hidden, true);
+  assert.equal(new URL(location.href).searchParams.has("tab"), false);
 
-  location.href = 'http://localhost/nomina/?university=vacia';
-  await import('../src/scripts/search.js?empty-pension-data');
+  location.href = "http://localhost/nomina/?university=vacia";
+  await import("../src/scripts/search.js?empty-pension-data");
   await setImmediate();
-  assert.equal(control('#pensions-tab').hidden, true);
-  assert.equal(control('#pensions-tab').disabled, true);
-  assert.equal(control('#pensions-panel').hidden, true);
+  assert.equal(control("#pensions-tab").hidden, true);
+  assert.equal(control("#pensions-tab").disabled, true);
+  assert.equal(control("#pensions-panel").hidden, true);
 
   // An unknown identifier must not silently load another university's payroll.
-  location.href = 'http://localhost/nomina/?university=unknown';
+  location.href = "http://localhost/nomina/?university=unknown";
   requests.length = 0;
-  await import('../src/scripts/search.js?unknown-university');
+  await import("../src/scripts/search.js?unknown-university");
   await setImmediate();
-  assert.deepEqual(requests, ['/data/universities.json']);
-  assert.equal(control('#search-section').hidden, true);
-  assert.equal(control('.dataset-tabs').hidden, true);
-  assert.match(control('#university-error').textContent, /no está disponible/);
-  assert.equal(control('#university-error').hidden, false);
+  assert.deepEqual(requests, ["/data/universities.json"]);
+  assert.equal(control("#search-section").hidden, true);
+  assert.equal(control(".dataset-tabs").hidden, true);
+  assert.match(control("#university-error").textContent, /no está disponible/);
+  assert.equal(control("#university-error").hidden, false);
 });
