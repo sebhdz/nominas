@@ -40,10 +40,10 @@ import RecordsTable from "../components/RecordsTable.astro";
     <section id="payroll-panel" class="browse" role="tabpanel" aria-labelledby="payroll-tab" aria-label="Nómina">
       <aside class="opinion-notice" aria-label="Cómo opinar sobre tu profesor">
         <strong>Ahora te toca opinar.</strong>
-        <p>Toca un nombre para abrir su ficha y opinar sobre tu profe.</p>
+        <p>Toca un registro para abrir su ficha y opinar sobre tu profe.</p>
       </aside>
       <p id="payroll-sort-note" class="sort-note">Ordenado por sueldo bruto, de mayor a menor · MXN</p>
-      <RecordsTable bodyId="results" regionLabel="Sueldos de profesores y funcionarios" caption="Sueldos mensuales de profesores y funcionarios. Selecciona un nombre para ver su ficha." columns={['Nombre', 'Puesto', 'Área / departamento', 'Sueldo mensual']} mobileAmountLabel="Sueldo mensual" />
+      <RecordsTable bodyId="results" regionLabel="Sueldos de profesores y funcionarios" caption="Sueldos mensuales de profesores y funcionarios. Selecciona un registro para ver su ficha." columns={['Nombre', 'Puesto', 'Área / departamento', 'Sueldo mensual']} mobileAmountLabel="Sueldo mensual" />
     </section>
     <section id="pensions-panel" class="browse" role="tabpanel" aria-labelledby="pensions-tab" aria-label="Pensionados" hidden>
       <p id="pension-sort-note" class="sort-note">Ordenado por monto reportado, de mayor a menor · MXN</p>

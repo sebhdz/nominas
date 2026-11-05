@@ -59,7 +59,7 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
       requests.push(url);
       await downloaded;
       if (url === '/data/universities.json') return { ok: true, json: async () => [
-        { id: 'prueba', name: 'Universidad de prueba', period: { inicio: '2026-04-01', fin: '2026-06-30' }, updates: ['2026-07-02'], url: '/data/prueba/2026.json', pensionUrl: '/data/pensions/prueba.json' },
+        { id: 'prueba', name: 'UNIVERSIDAD DE PRUEBA', period: { inicio: '2026-04-01', fin: '2026-06-30' }, updates: ['2026-07-02'], url: '/data/prueba/2026.json', pensionUrl: '/data/pensions/prueba.json' },
         { id: 'otra', url: '/data/otra/2026.json', pensionUrl: null },
         { id: 'vacia', url: '/data/vacia/2026.json', pensionUrl: '/data/pensions/vacia.json' },
       ] };
@@ -102,13 +102,22 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   assert.equal(url.searchParams.has('orden'), false);
   assert.equal(url.searchParams.get('university'), 'prueba');
   assert.deepEqual(requests.filter(url => typeof url === 'string' && url.startsWith('/data/')), ['/data/universities.json', '/data/prueba/2026.json', '/data/pensions/prueba.json']);
-  assert.equal(control('#university-name').textContent, 'Nómina Universidad de prueba');
+  assert.equal(control('#university-name').textContent, 'Nómina UNIVERSIDAD DE PRUEBA');
   assert.equal(control('#pensions-tab').hidden, false);
-  control('#results').children[0].children[0].children[0].dispatch('click');
+  const payrollRow = control('#results').children[0];
+  assert.equal(typeof payrollRow.listeners.click, 'function', 'payroll rows have a click listener');
+  payrollRow.children[0].children[0].dispatch('click');
   assert.equal(new URL(location.href).searchParams.get('university'), 'prueba');
   assert.equal(new URL(location.href).searchParams.get('persona'), '2');
   assert.match(control('#person-period').textContent, /Periodo informado: 1 de abril de 2026/);
   assert.match(control('#person-source-date').textContent, /2 de julio de 2026/);
+
+  // Closing dialog and clicking anywhere on the row also opens the person
+  control('#person-dialog').close();
+  assert.equal(new URL(location.href).searchParams.has('persona'), false);
+  payrollRow.dispatch('click');
+  assert.equal(new URL(location.href).searchParams.get('persona'), '2');
+
   control('#pensions-tab').dispatch('click');
   assert.equal(control('#pensions-panel').hidden, false);
   assert.equal(control('#search').value, 'Andres');
@@ -121,6 +130,7 @@ test('conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   assert.equal(pensionName.children[0].textContent, 'Andres');
   assert.equal(pensionName.children[1].textContent, 'Gurrola');
   assert.equal(pensionName.listeners.click, undefined, 'pension names do not open payroll voting');
+  assert.equal(pensionRow.listeners.click, undefined, 'pension rows do not open payroll voting');
   assert.equal(pensionRow.children[3].children.length, 2, 'pensions do not invent a net amount');
   assert.match(control('#pension-results').children[0].children[3].children[1].textContent, /Quincenal/);
   assert.equal(control('#pension-results').children[0].children[1].children.length, 1);

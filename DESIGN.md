@@ -30,7 +30,7 @@ The university directory has its own composition in `UniversityDirectory.astro`:
 - Use straight borders, simple blocks, and clear rules. Avoid shadows, gradients, decorative arrows, and extra elements competing with search. The directory's single consultation stamp is the approved decorative exception; do not add stickers to the payroll interface.
 - On desktop, show name, position, area/department, and monthly pay. Give names priority: 22px sans serif, weight 700, line-height 1.3. The current interface splits published given names and surnames into two lines; preserve source accents and display interior name particles in lowercase. The full name remains available through the record details and accessible labeling.
 - Payroll and pension tables share their table component, row renderer, name typography and responsive layout. Pension names retain the same two-line presentation, without implying a payroll detail or voting action.
-- Position and area use bold centered sans serif. Gross pay is large and condensed, followed closely by its label and bold net pay. Open details from the name.
+- Position and area use bold centered sans serif. Gross pay is large and condensed, followed closely by its label and bold net pay. On payroll records, selecting anywhere on the row or person name opens the profile details.
 - At widths up to 700px, compact each row into information on the left and pay on the right, with corresponding headings. Preserve the light information background, mustard salary background, outer border, and row separators. Keep name and pay together without horizontal scrolling or duplicated rendering.
 
 ## Current interface behavior

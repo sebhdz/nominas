@@ -110,6 +110,11 @@ input::placeholder { color: #6e7276; opacity: 1; }
 .opinion-notice strong { font: 900 24px/1.05 Impact, 'Arial Narrow', sans-serif; text-transform: uppercase; }
 .opinion-notice p { margin: 0; font-size: 11px; font-weight: 700; line-height: 1.5; }
 .payroll-table tr:hover td:not(.salary-cell) { background: #f5efe5; }
+.payroll-table tr.clickable-row { cursor: pointer; }
+.payroll-table tr.clickable-row:hover td:not(.salary-cell),
+.payroll-table tr.clickable-row:active td:not(.salary-cell) { background: #f5efe5; }
+.payroll-table tr.clickable-row:active .salary-cell { filter: brightness(0.95); }
+.payroll-table tr.clickable-row:hover .person-link { text-decoration: underline; text-underline-offset: 4px; }
 .empty-message h3 { font-size: 17px; margin: 8px 0; }
 .empty-message p { font-size: 13px; margin: 0 0 8px; font-weight: 400; }
 .data-message { border: 2px solid var(--ink); padding: 18px; background: var(--white); font-size: 13px; line-height: 1.6; }

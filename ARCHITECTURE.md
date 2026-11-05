@@ -46,7 +46,7 @@ An array with one entry per institution:
 | Field | Type and meaning |
 | --- | --- |
 | `id` | String; institution directory identifier, matched exactly against the URL. |
-| `name` | String; published institution name with the portal's leading three-letter region/scope prefix removed when present. |
+| `name` | String; published institution name with the portal's leading three-letter region/scope prefix removed when present, normalized to uppercase. |
 | `year` | Four-digit string; latest prepared year. |
 | `period` | Object with ISO `inicio` and `fin` reporting dates. |
 | `updates` | Sorted array of distinct nonempty ISO source update dates. |
