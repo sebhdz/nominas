@@ -167,7 +167,15 @@ function renderTableResults(target, pension = false) {
     if (!pension) {
       name.type = "button";
       name.setAttribute("aria-label", `Ver sueldo de ${person.nombre}`);
-      name.addEventListener("click", () => openPerson(person, name));
+      name.addEventListener("click", (event) => {
+        event?.stopPropagation?.();
+        openPerson(person, name);
+      });
+      row.classList.add("clickable-row");
+      row.addEventListener("click", () => {
+        if (window.getSelection?.()?.toString?.()) return;
+        openPerson(person, name);
+      });
     }
     nameCell.append(name);
     const evaluation = !pension && evaluationSummary(person);
@@ -708,8 +716,8 @@ async function loadData() {
       throw new Error("Archivo vacío");
     const hasEvaluations = people.some(person => evaluationSummary(person));
     $("#profile-notice-text").textContent = hasEvaluations
-      ? "Toca un nombre para opinar sobre tu profe y consultar su evaluación institucional, cuando esté disponible."
-      : "Toca un nombre para abrir su ficha y opinar sobre tu profe.";
+      ? "Toca un registro para opinar sobre tu profe y consultar su evaluación institucional, cuando esté disponible."
+      : "Toca un registro para abrir su ficha y opinar sobre tu profe.";
     if (university.pensionUrl) {
       try {
         const pensionResponse = await fetch(university.pensionUrl);

@@ -100,7 +100,7 @@ test("conserva búsqueda, filtros y enlace si se editan antes de terminar la des
           json: async () => [
             {
               id: "prueba",
-              name: "Universidad de prueba",
+              name: "UNIVERSIDAD DE PRUEBA",
               period: { inicio: "2026-04-01", fin: "2026-06-30" },
               updates: ["2026-07-02"],
               url: "/data/prueba/2026.json",
@@ -218,9 +218,11 @@ test("conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   );
   assert.equal(
     control("#university-name").textContent,
-    "Nómina Universidad de prueba",
+    "Nómina UNIVERSIDAD DE PRUEBA",
   );
   assert.equal(control("#pensions-tab").hidden, false);
+  const payrollRow = control("#results").children[0];
+  assert.equal(typeof payrollRow.listeners.click, "function", "payroll rows have a click listener");
   control("#results").children[0].children[0].children[0].dispatch("click");
   assert.equal(new URL(location.href).searchParams.get("university"), "prueba");
   assert.equal(new URL(location.href).searchParams.get("persona"), "2");
@@ -234,6 +236,14 @@ test("conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   );
   assert.equal(control("#person-evaluation").hidden, true);
   assert.equal(control("#person-evaluation").textContent, "");
+  control("#person-dialog").close();
+  assert.equal(new URL(location.href).searchParams.has("persona"), false);
+  window.getSelection = () => ({ toString: () => "texto seleccionado" });
+  payrollRow.dispatch("click");
+  assert.equal(control("#person-dialog").open, false, "selecting text does not open a profile");
+  window.getSelection = () => ({ toString: () => "" });
+  payrollRow.dispatch("click");
+  assert.equal(new URL(location.href).searchParams.get("persona"), "2");
   control("#search").value = "Delia";
   control("#search").dispatch("input");
   await new Promise((resolve) => setTimeout(resolve, 150));
@@ -255,6 +265,7 @@ test("conserva búsqueda, filtros y enlace si se editan antes de terminar la des
   assert.equal(new URL(location.href).searchParams.get("tab"), "pensiones");
   assert.equal(control("#pension-results").children.length, 1);
   const pensionRow = control("#pension-results").children[0];
+  assert.equal(pensionRow.listeners.click, undefined, "pension rows do not open payroll voting");
   assert.equal(pensionRow.children.length, 4);
   const pensionName = pensionRow.children[0].children[0];
   assert.equal(pensionName.children[0].textContent, "Andres");
