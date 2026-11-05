@@ -289,7 +289,7 @@ body:has(dialog[open]) { overflow: hidden; }
 
 /* Published evaluations and visitor opinions are separate sources. */
 .row-evaluation { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin-top: 5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.2; text-align: left; }
-.row-evaluation-label, .row-evaluation-context { flex-basis: 100%; font-size: 10px; line-height: 1.25; color: #625c52; }
+.row-evaluation-label { flex-basis: 100%; font-size: 10px; line-height: 1.25; color: #625c52; }
 .row-evaluation-score { font-size: 18px; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
 .row-evaluation-original { font-size: 10px; }
 .evaluation-original { display: block; margin-top: 1px; font-size: 12px; font-weight: 700; line-height: 1.3; }

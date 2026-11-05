@@ -185,7 +185,6 @@ function renderTableResults(target, pension = false) {
         element("span", "row-evaluation-label", "Evaluación institucional"),
         element("strong", "row-evaluation-score", evaluation.equivalent),
         element("span", "row-evaluation-original", `${evaluation.original} · escala original`),
-        element("span", "row-evaluation-context", evaluation.context),
       );
       nameCell.append(summary);
     }
