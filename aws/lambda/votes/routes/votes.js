@@ -106,6 +106,7 @@ votesRouter.get('/:prof_key', async (c) => {
     const recNo = stats.recommends_no || 0;
     const recommendPct = totalRec > 0 ? Math.round((recYes / totalRec) * 100) : null;
 
+    c.header('Cache-Control', 'public, max-age=180, s-maxage=300, stale-while-revalidate=60');
     return c.json({
       prof_key: profKey,
       slug: stats.slug || null,
@@ -122,6 +123,7 @@ votesRouter.get('/:prof_key', async (c) => {
     });
   } catch (err) {
     console.error(err);
+    c.header('Cache-Control', 'no-store');
     return c.json({ error: 'Error al consultar estadísticas' }, 500);
   }
 });

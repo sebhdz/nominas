@@ -261,3 +261,25 @@ test('fetchBatchOpinions queries batch endpoint and returns results safely', asy
   const fallback = await fetchBatchOpinions(['uaa:juan-perez']);
   assert.deepEqual(fallback, {});
 });
+
+test('repeated profile views reuse cached perception data without extra network requests', async t => {
+  const env = environment(t);
+  env.el('vote-turnstile').dataset.sitekey = 'test-sitekey';
+  let fetchCount = 0;
+  globalThis.fetch = async (_url, options = {}) => {
+    if (options.method === 'POST') return response(empty);
+    fetchCount++;
+    return response({ ...empty, deserves_more: 5, total_votes: 5 });
+  };
+  const votes = await import('../src/scripts/votes.js?client-cache-dev');
+  t.after(() => votes.resetPerception());
+
+  await votes.loadPerception('uaa', 'Profesor Cache');
+  assert.equal(fetchCount, 1);
+  assert.equal(env.el('count-more').textContent, '5');
+
+  await votes.loadPerception('uaa', 'Profesor Cache');
+  assert.equal(fetchCount, 1, 'second load should reuse cached stats');
+  assert.equal(env.el('count-more').textContent, '5');
+});
+

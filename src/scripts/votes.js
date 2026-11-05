@@ -5,6 +5,13 @@ const API_BASE_URL = 'https://vd3xlkw2cplwb2azb27434xd6y0wfmxh.lambda-url.us-eas
 const STORAGE_TOKEN_KEY = 'nominas_voter_token';
 const STORAGE_SALARY_KEY = 'nominas_user_votes';
 const STORAGE_REC_KEY = 'nominas_user_recommendations';
+const STATS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+const statsCache = new Map();
+
+export function clearPerceptionCache() {
+  statsCache.clear();
+}
 
 let currentProfKey = null;
 let currentUniversityId = null;
@@ -183,11 +190,26 @@ export async function loadPerception(universityId, fullName) {
   currentSalaryChoice = salaryMap[currentProfKey] || null;
   currentRecChoice = recMap[currentProfKey] || null;
 
+  const now = Date.now();
+  const cached = statsCache.get(currentProfKey);
+  const salStatusEl = getEl('perception-status');
+  const recStatusEl = getEl('recommend-status');
+
+  if (cached && now - cached.timestamp < STATS_CACHE_TTL_MS) {
+    loadingOpinions = false;
+    loaded = true;
+    updateVoteButtons();
+    currentSalaryStats = { ...cached.salary };
+    currentRecStats = { ...cached.rec };
+    if (salStatusEl) salStatusEl.textContent = '';
+    if (recStatusEl) recStatusEl.textContent = '';
+    renderUI();
+    return;
+  }
+
   currentSalaryStats = { deserves_more: 0, is_fair: 0, deserves_less: 0, total_votes: 0 };
   currentRecStats = { recommends_yes: 0, recommends_no: 0, total_recommendations: 0, recommend_percentage: null };
 
-  const salStatusEl = getEl('perception-status');
-  const recStatusEl = getEl('recommend-status');
   if (salStatusEl) salStatusEl.textContent = 'Cargando opiniones…';
   if (recStatusEl) recStatusEl.textContent = '';
   renderUI();
@@ -215,6 +237,12 @@ export async function loadPerception(universityId, fullName) {
       total_recommendations: data.total_recommendations || 0,
       recommend_percentage: data.recommend_percentage ?? null,
     };
+
+    statsCache.set(currentProfKey, {
+      salary: { ...currentSalaryStats },
+      rec: { ...currentRecStats },
+      timestamp: Date.now(),
+    });
 
     if (salStatusEl) salStatusEl.textContent = '';
     renderUI();
@@ -308,27 +336,35 @@ async function castVote(choice, category = 'salary') {
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    const updatedSalary = {
+      deserves_more: data.deserves_more || 0,
+      is_fair: data.is_fair || 0,
+      deserves_less: data.deserves_less || 0,
+      total_votes: data.total_votes || 0,
+    };
+    const updatedRec = {
+      recommends_yes: data.recommends_yes || 0,
+      recommends_no: data.recommends_no || 0,
+      total_recommendations: data.total_recommendations || 0,
+      recommend_percentage: data.recommend_percentage ?? null,
+    };
+    statsCache.set(profKey, {
+      salary: updatedSalary,
+      rec: updatedRec,
+      timestamp: Date.now(),
+    });
+
     if (generation !== requestGeneration) {
       setLocalChoice(isRec ? STORAGE_REC_KEY : STORAGE_SALARY_KEY, profKey, data.user_choice || null);
       return;
     }
 
     if (isRec) {
-      currentRecStats = {
-        recommends_yes: data.recommends_yes || 0,
-        recommends_no: data.recommends_no || 0,
-        total_recommendations: data.total_recommendations || 0,
-        recommend_percentage: data.recommend_percentage ?? null,
-      };
+      currentRecStats = updatedRec;
       currentRecChoice = data.user_choice || null;
       setLocalChoice(STORAGE_REC_KEY, profKey, currentRecChoice);
     } else {
-      currentSalaryStats = {
-        deserves_more: data.deserves_more || 0,
-        is_fair: data.is_fair || 0,
-        deserves_less: data.deserves_less || 0,
-        total_votes: data.total_votes || 0,
-      };
+      currentSalaryStats = updatedSalary;
       currentSalaryChoice = data.user_choice || null;
       setLocalChoice(STORAGE_SALARY_KEY, profKey, currentSalaryChoice);
     }
@@ -336,6 +372,11 @@ async function castVote(choice, category = 'salary') {
     renderUI();
     if (statusEl) statusEl.textContent = targetChoice === 'cancel' ? 'Opinión retirada' : 'Opinión registrada';
   } catch {
+    statsCache.set(profKey, {
+      salary: { ...(isRec ? currentSalaryStats : previousStats) },
+      rec: { ...(isRec ? previousStats : currentRecStats) },
+      timestamp: Date.now(),
+    });
     if (generation !== requestGeneration) {
       setLocalChoice(isRec ? STORAGE_REC_KEY : STORAGE_SALARY_KEY, profKey, previousChoice);
       return;
